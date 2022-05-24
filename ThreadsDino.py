@@ -34,7 +34,7 @@ class SendVoltage(QThread):
             try:
                 value = self.get_input_value()
             except ValueError:
-                run_loop = False
+                self.ThreadActive = False
             else:
                 # Write the value to the selected channel.
                 try:
@@ -45,6 +45,7 @@ class SendVoltage(QThread):
                     error = True
         if error:
             print("Error al escribir en la salida analoga.")
+            
     def stop(self):
         self.ThreadActive = False
         self.quit()
