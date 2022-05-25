@@ -7,11 +7,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
         self.setupUi(self)
         self.Aplicar.clicked.connect(lambda: self.DACVoltageDC())
-
+        self.SendVoltage = SendVoltage()
+        self.ReadVoltage = ReadVoltage()
+        self.ReadFrecuency = ReadFrecuency()
+        self.ReadVoltage.start()
+        self.ReadFrecuency.start()
+        self.ReadVoltage.VoltageUpdate.connect(self.VoltageSlotUpdate)
+        self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
+    
     def DACVoltageDC(self):
         self.SendVoltage = SendVoltage()
         if self.SendVoltage.isFinished:
             self.SendVoltage.start()
         config.value=self.plainTextEdit.getText()
 
+    def VoltageSlotUpdate(self, Voltage):
+        self.Ch1.setText('{:.5f}'.format(Voltage[0], 'V  '))
+        self.Ch2.setText('{:.5f}'.format(Voltage[1], 'V  '))
+        self.Ch3.setText('{:.5f}'.format(Voltage[2], 'V  '))
+        self.Ch4.setText('{:.5f}'.format(Voltage[3], 'V  '))
+ 
+    def FrecuencyUpdate(self, frecuencia):
+        self.Frecuency.setText('{:.2f}'.format(frecuencia, 'Hz  '))
     

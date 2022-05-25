@@ -41,53 +41,131 @@ Voltaje</string>
    <widget class="QLabel" name="Ch1">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>80</x>
       <y>50</y>
       <width>47</width>
       <height>13</height>
      </rect>
     </property>
     <property name="text">
-     <string>Ch1</string>
+     <string>0V</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="Ch2">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>80</x>
       <y>70</y>
       <width>47</width>
       <height>13</height>
      </rect>
     </property>
     <property name="text">
-     <string>Ch2</string>
+     <string>0V</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="Ch3">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>80</x>
       <y>90</y>
       <width>47</width>
       <height>13</height>
      </rect>
     </property>
     <property name="text">
-     <string>Ch3</string>
+     <string>0V</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
+   <widget class="QLabel" name="Ch4">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>80</x>
       <y>110</y>
       <width>47</width>
       <height>13</height>
      </rect>
     </property>
     <property name="text">
-     <string>Ch4</string>
+     <string>0V</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Frecuency">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>110</y>
+      <width>61</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0Hz</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Ch1_2">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>50</y>
+      <width>47</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ch1:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Ch2_2">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>70</y>
+      <width>47</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ch2:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Ch3_2">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>90</y>
+      <width>47</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ch3:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Ch4_2">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>110</y>
+      <width>47</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Ch4:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="Frecuency_2">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>110</y>
+      <width>61</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Frecuencia:</string>
     </property>
    </widget>
   </widget>
