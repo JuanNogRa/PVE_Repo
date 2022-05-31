@@ -9,14 +9,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Aplicar.clicked.connect(lambda: self.DACVoltageDC())
         self.SendVoltage = SendVoltage()
         self.ReadVoltage = ReadVoltage()
-        self.ReadFrecuency = ReadFrecuency()
+        #self.ReadFrecuency = ReadFrecuency()
         self.ReadVoltage.start()
-        self.ReadFrecuency.start()
+        #self.ReadFrecuency.start()
         self.ReadVoltage.VoltageUpdate.connect(self.VoltageSlotUpdate)
-        self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
+        #self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
     
     def DACVoltageDC(self):
-        self.SendVoltage = SendVoltage()
         if self.SendVoltage.isFinished:
             self.SendVoltage.start()
         config.value=self.plainTextEdit.getText()
@@ -30,3 +29,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def FrecuencyUpdate(self, frecuencia):
         self.Frecuency.setText('{:.2f}'.format(frecuencia, 'Hz  '))
     
+if __name__ == "__main__":
+    app = QtWidgets.QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec_()

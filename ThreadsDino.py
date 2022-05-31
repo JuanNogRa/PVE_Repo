@@ -9,7 +9,7 @@ import config
 """Hilo para generar voltaje usando el MCC 152."""
 class SendVoltage(QThread):
     
-    def __init__(self, path, activateRectification):
+    def __init__(self):
         QThread.__init__(self)
         """
         This function is executed automatically when the module is run directly.
@@ -59,6 +59,7 @@ class SendVoltage(QThread):
         min_v = mcc152.info().AO_MIN_RANGE
         max_v = mcc152.info().AO_MAX_RANGE
         message=config.value
+        print(message)
         if version_info.major > 2:
             str_v = input(message)
         else:
@@ -86,8 +87,8 @@ from daqhats_utils import select_hat_device, enum_mask_to_string, \
 
 """Hilo para leer voltaje usando el MCC 128."""
 class ReadVoltage(QThread):
-    VoltageUpdate = pyqtSignal()
-    def __init__(self, path, activateRectification):
+    VoltageUpdate = pyqtSignal(list)
+    def __init__(self):
         QThread.__init__(self)
         """
         This function is executed automatically when the module is run directly.
@@ -125,10 +126,7 @@ class ReadVoltage(QThread):
         
     def run(self):
         samples_per_channel = 0
-        sumCh0=0
-        sumCh1=0
-        sumCh2=0
-        sumCh3=0
+        sumCh0,sumCh1,sumCh2,sumCh3=0
         canales_lectura = [0, 1, 4, 5]                      # Canales a usar para leer voltaje.
         self.ThreadActive = True
         error = False
@@ -152,7 +150,12 @@ class ReadVoltage(QThread):
 
                 stdout.flush()
                 if (samples_per_channel==100):
+                    samples_per_channel=0
                     self.VoltageUpdate.emit([sumCh0/100, sumCh1/100, sumCh2/100, sumCh3/100])
+                    sumCh0=0
+                    sumCh1=0
+                    sumCh2=0
+                    sumCh3=0
             
     def stop(self):
         self.ThreadActive = False
