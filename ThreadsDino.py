@@ -126,7 +126,10 @@ class ReadVoltage(QThread):
         
     def run(self):
         samples_per_channel = 0
-        sumCh0,sumCh1,sumCh2,sumCh3=0
+        sumCh0=0
+        sumCh1=0
+        sumCh2=0
+        sumCh3=0
         canales_lectura = [0, 1, 4, 5]                      # Canales a usar para leer voltaje.
         self.ThreadActive = True
         error = False

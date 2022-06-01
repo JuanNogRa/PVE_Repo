@@ -18,7 +18,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def DACVoltageDC(self):
         if self.SendVoltage.isFinished:
             self.SendVoltage.start()
-        config.value=self.plainTextEdit.getText()
+        config.value=self.InputVoltage.text()
 
     def VoltageSlotUpdate(self, Voltage):
         self.Ch1.setText('{:.5f}'.format(Voltage[0], 'V  '))

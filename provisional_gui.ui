@@ -28,16 +28,6 @@
 Voltaje</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>150</y>
-      <width>121</width>
-      <height>31</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QLabel" name="Ch1">
     <property name="geometry">
      <rect>
@@ -166,6 +156,16 @@ Voltaje</string>
     </property>
     <property name="text">
      <string>Frecuencia:</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="InputVoltage">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>160</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
     </property>
    </widget>
   </widget>

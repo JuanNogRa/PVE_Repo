@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'provisional_gui.ui'
+# Form implementation generated from reading ui file 'C:\Users\Usuario\Downloads\read_PWM_py\provisional_gui.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.6
 #
@@ -20,9 +20,6 @@ class Ui_MainWindow(object):
         self.Aplicar = QtWidgets.QPushButton(self.centralwidget)
         self.Aplicar.setGeometry(QtCore.QRect(180, 150, 61, 31))
         self.Aplicar.setObjectName("Aplicar")
-        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.centralwidget)
-        self.plainTextEdit.setGeometry(QtCore.QRect(40, 150, 121, 31))
-        self.plainTextEdit.setObjectName("plainTextEdit")
         self.Ch1 = QtWidgets.QLabel(self.centralwidget)
         self.Ch1.setGeometry(QtCore.QRect(80, 50, 47, 13))
         self.Ch1.setObjectName("Ch1")
@@ -53,6 +50,9 @@ class Ui_MainWindow(object):
         self.Frecuency_2 = QtWidgets.QLabel(self.centralwidget)
         self.Frecuency_2.setGeometry(QtCore.QRect(260, 110, 61, 16))
         self.Frecuency_2.setObjectName("Frecuency_2")
+        self.InputVoltage = QtWidgets.QLineEdit(self.centralwidget)
+        self.InputVoltage.setGeometry(QtCore.QRect(40, 160, 113, 20))
+        self.InputVoltage.setObjectName("InputVoltage")
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
