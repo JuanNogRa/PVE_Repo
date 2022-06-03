@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>435</width>
-    <height>229</height>
+    <height>259</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>150</y>
+      <y>180</y>
       <width>61</width>
       <height>31</height>
      </rect>
@@ -28,146 +28,229 @@
 Voltaje</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit">
+   <widget class="QLineEdit" name="InputVoltage">
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>150</y>
-      <width>121</width>
-      <height>31</height>
+      <y>190</y>
+      <width>113</width>
+      <height>20</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="Ch1">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>50</y>
-      <width>47</width>
-      <height>13</height>
+      <x>20</x>
+      <y>20</y>
+      <width>191</width>
+      <height>131</height>
      </rect>
     </property>
-    <property name="text">
-     <string>0V</string>
+    <property name="title">
+     <string>Lectura de voltaje </string>
     </property>
+    <widget class="QLabel" name="Ch2">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>50</y>
+       <width>60</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0V</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch4_2">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>90</y>
+       <width>100</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Excitación sensores:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch2_2">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>50</y>
+       <width>100</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Celda de carga 02:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch1">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>30</y>
+       <width>60</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0V</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch1_2">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>30</y>
+       <width>90</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Celda de carga 01:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch3_2">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>70</y>
+       <width>47</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>PAU:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch3">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>70</y>
+       <width>60</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0V</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Ch4">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>90</y>
+       <width>60</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0V</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLabel" name="Ch2">
+   <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>70</y>
-      <width>47</width>
-      <height>13</height>
+      <x>210</x>
+      <y>20</y>
+      <width>191</width>
+      <height>131</height>
      </rect>
     </property>
-    <property name="text">
-     <string>0V</string>
+    <property name="title">
+     <string>Lectura de motor</string>
     </property>
+    <widget class="QLabel" name="Frecuency">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>30</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0Hz</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Frecuency_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Frecuencia:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Velocidad">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>51</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Velocidad
+lineal:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="Velocida_value">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>50</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0 Km/h</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="RPM">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>90</y>
+       <width>47</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RPM:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="RPM_value">
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>90</y>
+       <width>47</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>0RPM</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLabel" name="Ch3">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>90</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>0V</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Ch4">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>110</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>0V</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Frecuency">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>110</y>
-      <width>61</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>0Hz</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Ch1_2">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>50</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Ch1:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Ch2_2">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>70</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Ch2:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Ch3_2">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>90</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Ch3:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Ch4_2">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>110</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Ch4:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="Frecuency_2">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>110</y>
-      <width>61</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Frecuencia:</string>
-    </property>
-   </widget>
+   <zorder>groupBox</zorder>
+   <zorder>Aplicar</zorder>
+   <zorder>InputVoltage</zorder>
+   <zorder>groupBox_2</zorder>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
