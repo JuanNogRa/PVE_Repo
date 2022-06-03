@@ -20,6 +20,7 @@ class Ui_MainWindow(object):
         self.Aplicar = QtWidgets.QPushButton(self.centralwidget)
         self.Aplicar.setGeometry(QtCore.QRect(180, 180, 61, 31))
         self.Aplicar.setObjectName("Aplicar")
+<<<<<<< HEAD
         self.InputVoltage = QtWidgets.QLineEdit(self.centralwidget)
         self.InputVoltage.setGeometry(QtCore.QRect(40, 190, 113, 20))
         self.InputVoltage.setObjectName("InputVoltage")
@@ -28,6 +29,13 @@ class Ui_MainWindow(object):
         self.groupBox.setObjectName("groupBox")
         self.Ch2 = QtWidgets.QLabel(self.groupBox)
         self.Ch2.setGeometry(QtCore.QRect(130, 50, 60, 13))
+=======
+        self.Ch1 = QtWidgets.QLabel(self.centralwidget)
+        self.Ch1.setGeometry(QtCore.QRect(80, 50, 47, 13))
+        self.Ch1.setObjectName("Ch1")
+        self.Ch2 = QtWidgets.QLabel(self.centralwidget)
+        self.Ch2.setGeometry(QtCore.QRect(80, 70, 47, 13))
+>>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
         self.Ch2.setObjectName("Ch2")
         self.Ch4_2 = QtWidgets.QLabel(self.groupBox)
         self.Ch4_2.setGeometry(QtCore.QRect(30, 90, 100, 13))
@@ -59,6 +67,7 @@ class Ui_MainWindow(object):
         self.Frecuency_2 = QtWidgets.QLabel(self.groupBox_2)
         self.Frecuency_2.setGeometry(QtCore.QRect(20, 30, 61, 16))
         self.Frecuency_2.setObjectName("Frecuency_2")
+<<<<<<< HEAD
         self.Velocidad = QtWidgets.QLabel(self.groupBox_2)
         self.Velocidad.setGeometry(QtCore.QRect(20, 50, 51, 31))
         self.Velocidad.setObjectName("Velocidad")
@@ -75,6 +84,11 @@ class Ui_MainWindow(object):
         self.Aplicar.raise_()
         self.InputVoltage.raise_()
         self.groupBox_2.raise_()
+=======
+        self.InputVoltage = QtWidgets.QLineEdit(self.centralwidget)
+        self.InputVoltage.setGeometry(QtCore.QRect(40, 160, 113, 20))
+        self.InputVoltage.setObjectName("InputVoltage")
+>>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")

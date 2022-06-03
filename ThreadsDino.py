@@ -4,8 +4,15 @@ from daqhats_utils import select_hat_device
 import config
 
 """Hilo para generar voltaje usando el MCC 152."""
+<<<<<<< HEAD
 class SendVoltage():
     def main_sendVoltage(self, value):
+=======
+class SendVoltage(QThread):
+    
+    def __init__(self):
+        QThread.__init__(self)
+>>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
         """
         This function is executed automatically when the module is run directly.
         """
@@ -41,6 +48,7 @@ class SendVoltage():
         # the user input.
         min_v = mcc152.info().AO_MIN_RANGE
         max_v = mcc152.info().AO_MAX_RANGE
+<<<<<<< HEAD
         message=value
         value = float(message)
         value = value/100.0
@@ -48,6 +56,12 @@ class SendVoltage():
         if (value < min_v) or (value > max_v):
             # Out of range, ask again.
             print("Value out of range.")
+=======
+        message=config.value
+        print(message)
+        if version_info.major > 2:
+            str_v = input(message)
+>>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
         else:
             # Valid value.
             return value
@@ -119,7 +133,11 @@ class ReadVoltage(QThread):
                     #print('{:12.5} V'.format(value), end='')
                 if (samples_per_channel==100):
                     samples_per_channel=0
+<<<<<<< HEAD
                     self.VoltageUpdate.emit([sumCh0/samples_per_channel, sumCh1/samples_per_channel, sumCh2/samples_per_channel, sumCh3/samples_per_channel])
+=======
+                    self.VoltageUpdate.emit([sumCh0/100, sumCh1/100, sumCh2/100, sumCh3/100])
+>>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
                     sumCh0=0
                     sumCh1=0
                     sumCh2=0
