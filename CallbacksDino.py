@@ -8,47 +8,33 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.SendVoltage = SendVoltage()
         self.ReadVoltage = ReadVoltage()
-<<<<<<< HEAD
         self.Aplicar.clicked.connect(lambda: self.DACVoltageDC())
-        self.ReadFrecuency = ReadFrecuency()
-        #self.ReadVoltage.start()
-        self.ReadFrecuency.start()
-        #self.ReadVoltage.VoltageUpdate.connect(self.VoltageSlotUpdate)
-        self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
-    
-    def DACVoltageDC(self):
-        #if self.SendVoltage.isFinished:
-        self.SendVoltage.main_sendVoltage(value)
-        value=self.InputVoltage.text()
-        print('Voltaje '+str(config.value))
-=======
         #self.ReadFrecuency = ReadFrecuency()
         self.ReadVoltage.start()
         #self.ReadFrecuency.start()
         self.ReadVoltage.VoltageUpdate.connect(self.VoltageSlotUpdate)
+        self.ReadVoltage.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
+        self.Factor_Amplificacion=100
+        self.divisor_Voltaje=3
         #self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
     
     def DACVoltageDC(self):
-        if self.SendVoltage.isFinished:
-            self.SendVoltage.start()
-        config.value=self.InputVoltage.text()
->>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
+        #if self.SendVoltage.isFinished:
+        value=self.InputVoltage.text()
+        self.SendVoltage.main_sendVoltage(value)
+        #print('Voltaje '+str(config.value))
 
     def VoltageSlotUpdate(self, Voltage):
-        self.Ch1.setText('{:.5f}'.format(Voltage[0], 'V'))
-        self.Ch2.setText('{:.5f}'.format(Voltage[1], 'V'))
-        self.Ch3.setText('{:.5f}'.format(Voltage[2], 'V'))
-        self.Ch4.setText('{:.5f}'.format(Voltage[3], 'V'))
+        self.Chan1.setText('{:.5f}'.format(Voltage[0]/self.Factor_Amplificacion, 'V'))
+        self.Chan2.setText('{:.5f}'.format(Voltage[1]/self.Factor_Amplificacion, 'V'))
+        self.Chan3.setText('{:.5f}'.format(Voltage[2]*self.divisor_Voltaje, 'V'))
+        self.Chan4.setText('{:.5f}'.format(Voltage[3]*self.divisor_Voltaje, 'V'))
  
-    def FrecuencyUpdate(self, frecuencia):
+    def FrecuencySlotUpdate(self, frecuencia):
         self.Frecuency.setText('{:.2f}'.format(frecuencia, 'Hz  '))
     
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     window = MainWindow()
     window.show()
-<<<<<<< HEAD
     app.exec_()
-=======
-    app.exec_()
->>>>>>> 1647d561ef571c11ccc42be3ababb6c635157c87
