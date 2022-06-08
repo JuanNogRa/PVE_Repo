@@ -43,7 +43,6 @@ class SendVoltage():
         max_v = mcc152.info().AO_MAX_RANGE
         message=value
         value = float(message)
-        value = value/100.0
         #print('Voltage en hilo '+str(value))
         if (value < min_v) or (value > max_v):
             # Out of range, ask again.
@@ -55,7 +54,7 @@ class SendVoltage():
 """Hilo para leer voltaje usando el MCC 128."""
 class ReadVoltage(QThread):
     VoltageUpdate = pyqtSignal(list)
-    FrecuencyUpdate = pyqtSignal(float)
+    FrecuencyUpdate = pyqtSignal(list)
     def __init__(self):
         QThread.__init__(self)
         """
@@ -134,7 +133,8 @@ class ReadVoltage(QThread):
                     sumCh2=0
                     sumCh3=0
                 f = self.p.frequency()
-                self.FrecuencyUpdate.emit(f)
+                self.counter_cycles = self.p._counter_pulses
+                self.FrecuencyUpdate.emit([f, self.counter_cycles])
                 #end = time.time()
                 #print('Tiempo '+str(end - start))
     def stop(self):

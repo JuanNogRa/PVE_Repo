@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>779</width>
-    <height>711</height>
+    <height>654</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,156 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="0">
+    <item row="1" column="1">
+     <widget class="QGroupBox" name="groupBox_6">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Lectura de celdas de carga, PAU y excitación de sensores </string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_3">
+          <item row="0" column="0">
+           <widget class="QLabel" name="Ch1_">
+            <property name="text">
+             <string>Celda de carga 01:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="Chan1">
+            <property name="text">
+             <string>0V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="Ch2_">
+            <property name="text">
+             <string>Celda de carga 02:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="Chan2">
+            <property name="text">
+             <string>0V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="Ch3_">
+            <property name="text">
+             <string>PAU:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="Chan3">
+            <property name="text">
+             <string>0V</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="Ch4_">
+            <property name="text">
+             <string>Excitación sensores:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="Chan4">
+            <property name="text">
+             <string>0V</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>Unidades de medida</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Celdas de carga</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="Celda0">
+              <property name="text">
+               <string>Voltage (V)</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="Celda1">
+              <property name="text">
+               <string>Torque (N-m)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="Celda2">
+              <property name="text">
+               <string>Peso (kg)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="3" column="0">
      <widget class="QGroupBox" name="groupBox_8">
       <property name="title">
        <string/>
@@ -47,7 +196,7 @@
          <item row="1" column="1">
           <widget class="QLabel" name="Potencia_value">
            <property name="text">
-            <string>0</string>
+            <string>0 W</string>
            </property>
           </widget>
          </item>
@@ -61,7 +210,7 @@
          <item row="2" column="1">
           <widget class="QLabel" name="PotenciaAcu_value">
            <property name="text">
-            <string>0</string>
+            <string>0 W</string>
            </property>
           </widget>
          </item>
@@ -102,7 +251,7 @@
          <item row="1" column="1">
           <widget class="QLineEdit" name="DiametroTambor_value">
            <property name="text">
-            <string>6.0198</string>
+            <string>0.50165</string>
            </property>
           </widget>
          </item>
@@ -211,51 +360,40 @@ recorrida:</string>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="velo0">
-              <property name="enabled">
-               <bool>true</bool>
+             <widget class="QListWidget" name="listWidget">
+              <property name="sortingEnabled">
+               <bool>false</bool>
               </property>
-              <property name="text">
-               <string>km/h</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="velo1">
-              <property name="text">
-               <string>km/s</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="velo2">
-              <property name="text">
-               <string>m/s</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="velo3">
-              <property name="text">
-               <string>rev/s</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="velo4">
-              <property name="text">
-               <string>rpm</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="velo5">
-              <property name="text">
-               <string>pulsos/min</string>
-              </property>
+              <item>
+               <property name="text">
+                <string>km/h</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>km/s</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>m/s</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>rev/s</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>rpm</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>pulsos/min</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -270,27 +408,22 @@ recorrida:</string>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="dis0">
-              <property name="text">
-               <string>m</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="radioButton">
-              <property name="text">
-               <string>km</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="radioButton_2">
-              <property name="text">
-               <string>rev</string>
-              </property>
+             <widget class="QListWidget" name="listWidget_2">
+              <item>
+               <property name="text">
+                <string>m</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>km</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>rev</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>
@@ -301,7 +434,7 @@ recorrida:</string>
       </layout>
      </widget>
     </item>
-    <item row="3" column="0">
+    <item row="4" column="0">
      <widget class="QGroupBox" name="groupBox_9">
       <property name="title">
        <string>Menú para la salida analoga</string>
@@ -325,123 +458,23 @@ Voltaje</string>
       </layout>
      </widget>
     </item>
-    <item row="1" column="1">
-     <widget class="QGroupBox" name="groupBox_6">
-      <property name="title">
-       <string/>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_6">
-       <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Lectura de celdas de carga, PAU y excitación de sensores </string>
-         </property>
-         <layout class="QFormLayout" name="formLayout_3">
-          <item row="0" column="0">
-           <widget class="QLabel" name="Ch1_">
-            <property name="text">
-             <string>Celda de carga 01:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="Chan1">
-            <property name="text">
-             <string>0V</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="Ch2_">
-            <property name="text">
-             <string>Celda de carga 02:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="Chan2">
-            <property name="text">
-             <string>0V</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="Ch3_">
-            <property name="text">
-             <string>PAU:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLabel" name="Chan3">
-            <property name="text">
-             <string>0V</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="Ch4_">
-            <property name="text">
-             <string>Excitación sensores:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLabel" name="Ch4_4">
-            <property name="text">
-             <string>0V</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox_7">
-         <property name="title">
-          <string>Unidades de medida</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_9">
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_8">
-            <item>
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>Celdas de carga</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="Celda0">
-              <property name="text">
-               <string>Voltage (V)</string>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QRadioButton" name="Celda1">
-              <property name="text">
-               <string>Torque (N-m)</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item row="4" column="0">
+    <item row="3" column="1">
      <widget class="QGroupBox" name="groupBox_10">
       <property name="title">
        <string>Menú para generar archivo de prueba</string>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_10">
+       <item>
+        <widget class="QTextEdit" name="textEdit">
+         <property name="html">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Agregue sus observaciones antes de terminar...&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_9">
          <item>

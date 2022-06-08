@@ -39,7 +39,7 @@ class reader:
       self._high_tick = None
       self._period = None
       self._high = None
-
+      self._counter_pulses = 0
       pi.set_mode(gpio, pigpio.INPUT)
 
       self._cb = pi.callback(gpio, pigpio.EITHER_EDGE, self._cbf)
@@ -47,10 +47,9 @@ class reader:
    def _cbf(self, gpio, level, tick):
 
       if level == 1:
-
+         self._counter_pulses += 1
          if self._high_tick is not None:
             t = pigpio.tickDiff(self._high_tick, tick)
-
             if self._period is not None:
                self._period = (self._old * self._period) + (self._new * t)
             else:
