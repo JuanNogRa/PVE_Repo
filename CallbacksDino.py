@@ -24,6 +24,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Celda0.toggled.connect(self.onClicked)
         self.Celda1.toggled.connect(self.onClicked)
         self.Celda2.toggled.connect(self.onClicked)
+        self.pushButton_2.clicked.connect(self.AdquirirEmpezar)
         self.VTorque = 'Voltage (V)'
 
         self.Factor_Amplificacion=100
@@ -59,10 +60,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         radioBtn = self.sender()
         if radioBtn.isChecked():
             self.VTorque=radioBtn.text()
+    
+    def AdquirirEmpezar(self):
+        config.startTest_activacte=True
         
     def VoltageSlotUpdate(self, Voltage):
-        masa_celda_01 = (Voltage[0]*self.capacidad_celdas)/(self.Factor_Amplificacion*self.sensibilidad_celdas*self.factor_libras_kilos*Voltage[0])
-        masa_celda_02 = (Voltage[2]*self.capacidad_celdas)/(self.Factor_Amplificacion*self.sensibilidad_celdas*self.factor_libras_kilos*Voltage[2])
+        masa_celda_01 = (Voltage[0]*self.capacidad_celdas)/(self.Factor_Amplificacion*self.sensibilidad_celdas*self.factor_libras_kilos*Voltage[3])
+        masa_celda_02 = (Voltage[2]*self.capacidad_celdas)/(self.Factor_Amplificacion*self.sensibilidad_celdas*self.factor_libras_kilos*Voltage[3])
         
         if(self.VTorque=='Voltage (V)'):
             self.Chan1.setText('{:.5f}'.format(Voltage[0]/self.Factor_Amplificacion)+' V')

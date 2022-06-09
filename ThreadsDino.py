@@ -133,77 +133,12 @@ class ReadVoltage(QThread):
                     sumCh2=0
                     sumCh3=0
                 f = self.p.frequency()
-                self.counter_cycles = self.p._counter_pulses
+                if (config.startTest_activacte==True):
+                    self.counter_cycles = self.p._counter_pulses
+                else:
+                    self.p._counter_pulses = 0
+                    self.counter_cycles = self.p._counter_pulses
                 self.FrecuencyUpdate.emit([f, self.counter_cycles])
-                #end = time.time()
-                #print('Tiempo '+str(end - start))
     def stop(self):
         self.ThreadActive = False
         self.quit()
-
-import time
-import pigpio
-import read_PWM
-
-"""Hilo para leer frecuencia usando la libreria Pigpio."""
-class ReadFrecuency(QThread):
-    FrecuencyUpdate = pyqtSignal()
-    """
-    A class to read PWM pulses and calculate their frequency
-    and duty cycle.  The frequency is how often the pulse
-    happens per second.  The duty cycle is the percentage of
-    pulse high time per cycle.
-    """
-    def __init__(self):
-        QThread.__init__(self)
-        
-        PWM_GPIO = 4
-        #self.SAMPLE_TIME = 2.0
-
-        pi = pigpio.pi()
-
-        self.p = read_PWM.reader(pi, PWM_GPIO)
-
-    def run(self):
-        self.ThreadActive = True
-        while self.ThreadActive:
-            #time.sleep(self.SAMPLE_TIME)
-            f = self.p.frequency()
-            self.FrecuencyUpdate.emit(f)
-
-    def stop(self):
-        self.ThreadActive = False
-        self.quit()
-    
-    """def _cbf(self, gpio, level, tick):
-
-        if level == 1:
-
-            if self._high_tick is not None:
-                t = pigpio.tickDiff(self._high_tick, tick)
-
-                if self._period is not None:
-                    self._period = (self._old * self._period) + (self._new * t)
-                else:
-                    self._period = t
-
-            self._high_tick = tick
-
-        elif level == 0:
-
-            if self._high_tick is not None:
-                t = pigpio.tickDiff(self._high_tick, tick)
-
-                if self._high is not None:
-                    self._high = (self._old * self._high) + (self._new * t)
-                else:
-                    self._high = t
-
-    def frequency(self):
-        
-        #Returns the PWM frequency.
-        
-        if self._period is not None:
-            return 1000000.0 / self._period
-        else:
-            return 0.0"""
