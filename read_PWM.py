@@ -4,7 +4,6 @@
 # 2015-12-08
 # Public Domain
 
-import time
 import pigpio # http://abyz.co.uk/rpi/pigpio/python.html
 
 class reader:

@@ -239,9 +239,9 @@ class Ui_MainWindow(object):
         self.groupBox_10.setObjectName("groupBox_10")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.groupBox_10)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
-        self.textEdit = QtWidgets.QTextEdit(self.groupBox_10)
-        self.textEdit.setObjectName("textEdit")
-        self.verticalLayout_10.addWidget(self.textEdit)
+        self.plainTextEdit = QtWidgets.QPlainTextEdit(self.groupBox_10)
+        self.plainTextEdit.setObjectName("plainTextEdit")
+        self.verticalLayout_10.addWidget(self.plainTextEdit)
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.pushButton_2 = QtWidgets.QPushButton(self.groupBox_10)
@@ -328,15 +328,11 @@ class Ui_MainWindow(object):
         item = self.listWidget_2.item(2)
         item.setText(_translate("MainWindow", "rev"))
         self.listWidget_2.setSortingEnabled(__sortingEnabled)
-        self.groupBox_9.setTitle(_translate("MainWindow", "Menú para la salida analoga"))
+        self.groupBox_9.setTitle(_translate("MainWindow", "Menú para la salida analoga (V)"))
         self.Aplicar.setText(_translate("MainWindow", "Aplicar\n"
 "Voltaje"))
         self.groupBox_10.setTitle(_translate("MainWindow", "Menú para generar archivo de prueba"))
-        self.textEdit.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Agregue sus observaciones antes de terminar...</p></body></html>"))
+        self.plainTextEdit.setPlainText(_translate("MainWindow", "Escriba sus observaciones antes de presionar \"Terminar\" o borre este campo si no tiene..."))
         self.pushButton_2.setText(_translate("MainWindow", "Empezar"))
         self.pushButton.setText(_translate("MainWindow", "Terminar"))
 

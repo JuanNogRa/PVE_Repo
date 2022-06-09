@@ -1,6 +1,7 @@
 from PyQt5.QtCore import pyqtSignal,QThread
 from daqhats import mcc152, OptionFlags, HatIDs, HatError, mcc128, AnalogInputMode, AnalogInputRange
 from daqhats_utils import select_hat_device
+import pandas as pd
 import config
 
 """Hilo para generar voltaje usando el MCC 152."""
@@ -125,7 +126,7 @@ class ReadVoltage(QThread):
                     if (chan==5):
                         sumCh3=sumCh3+value
                     #print('{:12.5} V'.format(value), end='')
-                if (samples_per_channel==58):
+                if (samples_per_channel==100):
                     self.VoltageUpdate.emit([sumCh0/samples_per_channel, sumCh1/samples_per_channel, sumCh2/samples_per_channel, sumCh3/samples_per_channel])
                     samples_per_channel=0
                     sumCh0=0
@@ -139,6 +140,75 @@ class ReadVoltage(QThread):
                     self.p._counter_pulses = 0
                     self.counter_cycles = self.p._counter_pulses
                 self.FrecuencyUpdate.emit([f, self.counter_cycles])
+                #end = time.time()
+                #print('Tiempo '+str(end - start))
     def stop(self):
         self.ThreadActive = False
         self.quit()
+
+import time
+import pigpio
+import read_PWM
+
+"""Hilo para leer frecuencia usando la libreria Pigpio."""
+class ReadFrecuency(QThread):
+    FrecuencyUpdate = pyqtSignal()
+    """
+    A class to read PWM pulses and calculate their frequency
+    and duty cycle.  The frequency is how often the pulse
+    happens per second.  The duty cycle is the percentage of
+    pulse high time per cycle.
+    """
+    def __init__(self):
+        QThread.__init__(self)
+        
+        PWM_GPIO = 4
+        #self.SAMPLE_TIME = 2.0
+
+        pi = pigpio.pi()
+
+        self.p = read_PWM.reader(pi, PWM_GPIO)
+
+    def run(self):
+        self.ThreadActive = True
+        while self.ThreadActive:
+            #time.sleep(self.SAMPLE_TIME)
+            f = self.p.frequency()
+            self.FrecuencyUpdate.emit(f)
+
+    def stop(self):
+        self.ThreadActive = False
+        self.quit()
+    
+    """def _cbf(self, gpio, level, tick):
+
+        if level == 1:
+
+            if self._high_tick is not None:
+                t = pigpio.tickDiff(self._high_tick, tick)
+
+                if self._period is not None:
+                    self._period = (self._old * self._period) + (self._new * t)
+                else:
+                    self._period = t
+
+            self._high_tick = tick
+
+        elif level == 0:
+
+            if self._high_tick is not None:
+                t = pigpio.tickDiff(self._high_tick, tick)
+
+                if self._high is not None:
+                    self._high = (self._old * self._high) + (self._new * t)
+                else:
+                    self._high = t
+
+    def frequency(self):
+        
+        #Returns the PWM frequency.
+        
+        if self._period is not None:
+            return 1000000.0 / self._period
+        else:
+            return 0.0"""
