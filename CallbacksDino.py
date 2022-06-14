@@ -94,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         ['Hora de finalización',self.fecha_hora_finalizacion],
                                         ['Voltage de salida analoga',self.value],['Observaciones'+Observaciones]])
         dataframe_datos = pd.DataFrame(self.dataforDataFrame,
-                columns=['Voltaje celda #1 (V)', 'Voltaje celda #2 (V)', 'Velocidad medida (m/s)','Voltaje PAU (V)', 'Voltaje de excitación (V)'])
+                columns=['Muestreo (s)','Voltaje celda #1 (V)', 'Voltaje celda #2 (V)', 'Velocidad medida (m/s)','Voltaje PAU (V)', 'Voltaje de excitación (V)'])
         dataframe = pd.concat([dataframe_header, dataframe_datos], ignore_index=True)
         dataframe.to_csv('/home/usuario/PVE_Repo/Pruebas/'+self.fecha_prueba+'_'+self.fecha_hora_inicio+'.csv', index=False)
         self.dataforDataFrame=[]
@@ -173,12 +173,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.PotenciaAcu_value.setText('{:.5f}'.format(potencia_acumulada)+' N '+unidad)
         
         if(config.startTest_activacte==True):
-            if(time.time()-self.start>0.250):
-                self.start=time.time()
+            time_total = time.time()-self.start
+            if(time_total>0.250):
+                time_total += time_total
                 velocidad = revoluciones*((self.diametro_rodillo*math.pi))
-                self.dataforDataFrame.append([self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
+                self.dataforDataFrame.append([time_total, self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
                 (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje])
-            
+                self.start=time.time()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
