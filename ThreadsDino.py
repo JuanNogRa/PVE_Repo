@@ -1,8 +1,10 @@
 from PyQt5.QtCore import pyqtSignal,QThread
 from daqhats import mcc152, OptionFlags, HatIDs, HatError, mcc128, AnalogInputMode, AnalogInputRange
 from daqhats_utils import select_hat_device
-import pandas as pd
 import config
+import pigpio
+import read_PWM
+import time
 
 """Hilo para generar voltaje usando el MCC 152."""
 class SendVoltage():
@@ -56,7 +58,7 @@ class SendVoltage():
 class ReadVoltage(QThread):
     VoltageUpdate = pyqtSignal(list)
     FrecuencyUpdate = pyqtSignal(list)
-    def __init__(self):
+    def __init__(self, MinimaFrecuencia):
         QThread.__init__(self)
         """
         This function is executed automatically when the module is run directly.
@@ -92,12 +94,11 @@ class ReadVoltage(QThread):
         self.hat.a_in_range_write(input_range)
         QThread.__init__(self)
         
-        PWM_GPIO = 4
+        PWM_GPIO = 17
         #self.SAMPLE_TIME = 2.0
 
         pi = pigpio.pi()
-
-        self.p = read_PWM.reader(pi, PWM_GPIO)
+        self.p = read_PWM.reader(pi, PWM_GPIO, MinimaFrecuencia)
         
     def run(self):
         samples_per_channel = 0
@@ -134,81 +135,45 @@ class ReadVoltage(QThread):
                     sumCh2=0
                     sumCh3=0
                 f = self.p.frequency()
+                
+                
+                    #self.p._counter_pulses = 0
                 if (config.startTest_activacte==True):
                     self.counter_cycles = self.p._counter_pulses
                 else:
                     self.p._counter_pulses = 0
                     self.counter_cycles = self.p._counter_pulses
-                self.FrecuencyUpdate.emit([f, self.counter_cycles])
+                
+                if f is not None:
+                    self.FrecuencyUpdate.emit([f, self.counter_cycles])
+                else:
+                    self.FrecuencyUpdate.emit([0, self.counter_cycles]) 
+                                   
+    
                 #end = time.time()
                 #print('Tiempo '+str(end - start))
     def stop(self):
         self.ThreadActive = False
         self.quit()
-
-import time
-import pigpio
-import read_PWM
-
-"""Hilo para leer frecuencia usando la libreria Pigpio."""
-class ReadFrecuency(QThread):
-    FrecuencyUpdate = pyqtSignal()
-    """
-    A class to read PWM pulses and calculate their frequency
-    and duty cycle.  The frequency is how often the pulse
-    happens per second.  The duty cycle is the percentage of
-    pulse high time per cycle.
-    """
-    def __init__(self):
-        QThread.__init__(self)
         
-        PWM_GPIO = 4
-        #self.SAMPLE_TIME = 2.0
-
-        pi = pigpio.pi()
-
-        self.p = read_PWM.reader(pi, PWM_GPIO)
-
+class Do_every(QThread):
+    def __init__(self, period):
+        QThread.__init__(self)
+        self.period = period
+        
     def run(self):
-        self.ThreadActive = True
+        self.ThreadActive=True
+        g = self.g_tick()
         while self.ThreadActive:
-            #time.sleep(self.SAMPLE_TIME)
-            f = self.p.frequency()
-            self.FrecuencyUpdate.emit(f)
-
+            time.sleep(next(g))
+            config.f=True
+    
+    def g_tick(self):
+        t = time.time()
+        while self.ThreadActive:
+            t += self.period
+            yield max(t - time.time(),0)
+                
     def stop(self):
         self.ThreadActive = False
         self.quit()
-    
-    """def _cbf(self, gpio, level, tick):
-
-        if level == 1:
-
-            if self._high_tick is not None:
-                t = pigpio.tickDiff(self._high_tick, tick)
-
-                if self._period is not None:
-                    self._period = (self._old * self._period) + (self._new * t)
-                else:
-                    self._period = t
-
-            self._high_tick = tick
-
-        elif level == 0:
-
-            if self._high_tick is not None:
-                t = pigpio.tickDiff(self._high_tick, tick)
-
-                if self._high is not None:
-                    self._high = (self._old * self._high) + (self._new * t)
-                else:
-                    self._high = t
-
-    def frequency(self):
-        
-        #Returns the PWM frequency.
-        
-        if self._period is not None:
-            return 1000000.0 / self._period
-        else:
-            return 0.0"""
