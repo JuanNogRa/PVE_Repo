@@ -8,16 +8,20 @@ import pandas as pd
 import time
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.figure import Figure
-from matplotlib import pyplot as plt
+#from matplotlib.figure import Figure
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
 
 
-class MplCanvas(FigureCanvas):
+ygraph=None
+"""class MplCanvas(FigureCanvas):
 
-    def __init__(self, parent=None, width=5, height=2, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+    def __init__(self, parent=None, width=5, height=2, dpi=20):
+        #fig = Figure(figsize=(width, height), dpi=dpi)
+        fig, axes = plt.subplots()
+        #self.axes = fig.add_subplot(111)
+        super(MplCanvas,self).__init__(fig, axes)"""
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     
@@ -77,15 +81,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Celda1.toggled.connect(self.onClicked)
         self.Celda2.toggled.connect(self.onClicked)
         
-        self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
+        self.canvas = MyFigureCanvas(x_len=(100), y_range=[-5, 5], interval=1)
+        #toolbar = NavigationToolbar(self.canvas, self)
+        #self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
         # Create toolbar, passing canvas as first parament, parent (self, the MainWindow) as second.
         toolbar = NavigationToolbar(self.canvas, self)
         self.Senales.addWidget(toolbar)
         self.Senales.addWidget(self.canvas)
-        plt.show(block=False)
+        self.show
         #self.Graph = Graph(1/self.Tasa_Muestreo)
-        self.canvas.draw()                                                   # added
-
+        #self._plot_ref = None
         
 
     def ParamsInput(self):
@@ -129,12 +134,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButton_2.setEnabled(False)
         self.button_parametro.setEnabled(False)
         self.pushButton.setEnabled(True)
-        n_data=int((self.Tasa_Muestreo))
-        self.xdata = [x*(1/(self.Tasa_Muestreo)) for x in list(range(n_data))]
-        self.ydata = [x*0 for x in list(range(n_data))]
-        self._plot_ref = None
-        self.ygraph=0.0
-        self.canvas.axes.cla()  # Clear the canvas.
+        x_len=int(self.Tasa_Muestreo)
+        self.canvas = MyFigureCanvas(x_len=(x_len), y_range=[-5, 5], interval=1/self.Tasa_Muestreo)
+        self.show
+        #toolbar = NavigationToolbar(self.canvas, self)
+        #n_data=int((self.Tasa_Muestreo)*2)
+        #self.xdata = [x*(1/(self.Tasa_Muestreo)) for x in list(range(n_data))]
+        #self.ydata = [x*0 for x in list(range(n_data))]
+        #self._plot_ref = None
+        #self.ygraph=0.0
+        #self.canvas.axes.cla()  # Clear the canvas.
         
         if self.Do_every.isFinished:
             self.Do_every = Do_every(1/self.Tasa_Muestreo)
@@ -166,6 +175,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_parametro.setEnabled(True)
         self.pushButton.setEnabled(False)
         self.Do_every.stop()
+        ygraph = None
         #self.Graph.stop()
         
     def VoltageSlotUpdate(self, Voltage):
@@ -190,6 +200,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Chan4.setText('{:.5f}'.format(Voltage[3]*self.divisor_Voltaje)+' V')
  
     def FrecuencySlotUpdate(self, datos_frecuencia):
+        global ygraph
         frecuencia=datos_frecuencia[0]
         self.cuentas_distancia=datos_frecuencia[1]
         distancia=datos_frecuencia[1]*(self.diametro_rodillo*math.pi)
@@ -247,17 +258,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.muestreo += self.muestreo_time
                 self.dataforDataFrame.append([self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
                     (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje])
-                
+                ygraph=self.Voltage[0]/self.Factor_Amplificacion
                 #print(str(self.xdata)+' '+str(self.ydata))
                 
                 config.f=False
-            self.ygraph=velocidad         
                 #self.Save=False
         
     def Time_MuestreoSlotUpdate(self, MuestreoTime):
         self.muestreo_time=MuestreoTime
-        if config.f:
-            self.update_plot()
+        #if config.f:
+            #self.update_plot()
+            #self.show()
         #if self._plot_ref is None:
             # First time we have no plot reference, so do a normal plot.
             # .plot returns a list of line <reference>s, as we're
@@ -283,15 +294,76 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             # We have a reference, we can use it to update the data for that line.
             self._plot_ref.set_ydata(self.ydata)
-        self.canvas.axes.draw_artist(self.canvas.axes.patch)
-        self.canvas.axes.draw_artist(self._plot_ref)
-        self.canvas.update()
         self.canvas.flush_events()
+        # Trigger the canvas to update and redraw.
+        self.canvas.draw()
+        #self.axes.draw_artist(self.canvas.patch)
+        #self.axes.draw_artist(self._plot_ref)
+        #self.canvas.update()
+        #self.canvas.flush_events()
         
             
             #if(time.time()-self.start>0.250):
                 #self.start=time.time()
+class MyFigureCanvas(FigureCanvas):
+    '''
+    This is the FigureCanvas in which the live plot is drawn.
 
+    '''
+    def __init__(self, x_len:int, y_range:list, interval:int) -> None:
+        '''
+        :param x_len:       The nr of data points shown in one plot.
+        :param y_range:     Range on y-axis.
+        :param interval:    Get a new datapoint every .. milliseconds.
+
+        '''
+        super().__init__(mpl.figure.Figure())
+        if ygraph is not None:
+            # Range settings
+            self._x_len_ = x_len
+            self._y_range_ = y_range
+
+            # Store two lists _x_ and _y_
+            self._x_ = list(range(0, x_len))
+            self._y_ = [0] * x_len
+
+            # Store a figure ax
+            self._ax_ = self.figure.subplots()
+            self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1]) # added
+            self._line_, = self._ax_.plot(self._x_, self._y_)                  # added
+        
+            self.draw()                                                        # added
+
+            # Initiate the timer
+            self._timer_ = self.new_timer(interval, [(self._update_canvas_, (), {})])
+            self._timer_.start()
+        return
+
+    def _update_canvas_(self) -> None:
+        global ygraph
+        '''
+        This function gets called regularly by the timer.
+
+        '''
+        self._y_.append(ygraph)     # Add new datapoint
+        self._y_ = self._y_[-self._x_len_:]                 # Truncate list y
+
+        # Previous code
+        # --------------
+        # self._ax_.clear()                                   # Clear ax
+        # self._ax_.plot(self._x_, self._y_)                  # Plot y(x)
+        # self._ax_.set_ylim(ymin=self._y_range_[0], ymax=self._y_range_[1])
+        # self.draw()
+
+        # New code
+        # ---------
+        self._line_.set_ydata(self._y_)
+        self._ax_.draw_artist(self._ax_.patch)
+        self._ax_.draw_artist(self._line_)
+        self.update()
+        self.flush_events()
+        return
+    
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     window = MainWindow()
