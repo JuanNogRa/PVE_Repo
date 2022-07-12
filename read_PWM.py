@@ -54,8 +54,8 @@ class reader:
          
          if self._high_tick is not None:
             t = pigpio.tickDiff(self._high_tick, tick)
+            self._startTime=time.time()
             if self._period is not None:
-               self._startTime=time.time()
                self._period = (self._old * self._period) + (self._new * t)
             else:
                self._period = t
@@ -66,13 +66,15 @@ class reader:
       Returns the PWM frequency.
       """
       self._timeTotal = time.time()-self._startTime
-      print(self._timeTotal)
-      if ((self._timeTotal) > 1/(self.MinimaFrecuencia)):
-         self._period=None
+      #print(self._timeTotal)
       if self._period is not None:
-         return 1000000.0 / self._period
+          if ((self._timeTotal) > 1/(self.MinimaFrecuencia) or 1000000.0 / self._period < (self.MinimaFrecuencia)):
+             #self._period=None
+             return None
+          else:
+             return 1000000.0 / self._period
       else:
-         return 0.0
+         return None
       
       
 

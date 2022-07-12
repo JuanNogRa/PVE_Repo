@@ -1,10 +1,13 @@
 from PyQt5.QtCore import pyqtSignal,QThread
+from PyQt5 import QtCore
 from daqhats import mcc152, OptionFlags, HatIDs, HatError, mcc128, AnalogInputMode, AnalogInputRange
 from daqhats_utils import select_hat_device
 import config
 import pigpio
 import read_PWM
 import time
+import matplotlib
+matplotlib.use('Qt5Agg')
 
 """Hilo para generar voltaje usando el MCC 152."""
 class SendVoltage():
@@ -99,6 +102,7 @@ class ReadVoltage(QThread):
 
         pi = pigpio.pi()
         self.p = read_PWM.reader(pi, PWM_GPIO, MinimaFrecuencia)
+        self.counter_cycles=0
         
     def run(self):
         samples_per_channel = 0
@@ -135,14 +139,12 @@ class ReadVoltage(QThread):
                     sumCh2=0
                     sumCh3=0
                 f = self.p.frequency()
-                
-                
                     #self.p._counter_pulses = 0
                 if (config.startTest_activacte==True):
                     self.counter_cycles = self.p._counter_pulses
                 else:
                     self.p._counter_pulses = 0
-                    self.counter_cycles = self.p._counter_pulses
+                    #self.counter_cycles = self.p._counter_pulses
                 
                 if f is not None:
                     self.FrecuencyUpdate.emit([f, self.counter_cycles])
@@ -157,6 +159,7 @@ class ReadVoltage(QThread):
         self.quit()
         
 class Do_every(QThread):
+    Muestreo_Time = pyqtSignal(float)
     def __init__(self, period):
         QThread.__init__(self)
         self.period = period
@@ -165,7 +168,9 @@ class Do_every(QThread):
         self.ThreadActive=True
         g = self.g_tick()
         while self.ThreadActive:
+            self.start=time.time()
             time.sleep(next(g))
+            self.Muestreo_Time.emit(time.time()-self.start)
             config.f=True
     
     def g_tick(self):
