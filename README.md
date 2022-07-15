@@ -33,3 +33,6 @@ FrecuencySlotUpdate: Método slot conectado a la señal “FrecuencyUpdate” de
 Time_MuestreoSlotUpdate: Método slot conectado a la señal “Muestreo_Time” del hilo “Do_every” el cual es ejecutado cada vez que se cumpla el tiempo dado al sistema o que es lo mismo cuando se cumpla la frecuencia de muestreo establecido. A parte de guardar el tiempo para posterior guardado se utiliza también para graficar las señales de velocidad y el torque de las celdas de carga. 
 
 sistema_sugeno: método donde se tiene el sistema de control basado en lógica difusa, el cual solo se ejecuta cuando se está operando el sistema de control en lazo cerrado. 
+
+## Descripción del módulo ThreadsDino.py 
+En este módulo están todos los procesos en paralelo necesarios para usar la aplicación, los cuales están divido en los siguientes QThreads (hilos usando la librería PyQt5): ReadVoltage y Do_every. Y también la clase SendVoltage. 
