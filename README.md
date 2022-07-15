@@ -20,6 +20,8 @@ listVelocidad  y listDistance: Los métodos listVelocidad  y listDistance son pa
 
 OnClicked: Este método guarda el texto del botón de selección activado para luego cambiar las unidades de medición de las celdas de carga a las deseadas. 
 
-ClickedLazo: Este método guarda el texto con la opción “Lazo abierto” o “Lazo cerrado” y así indicar al programa el modo de control. Este metodo se ejecuta al generarse un llamamiento al presionar alguno de los dos botones de selección. 
+ClickedLazo: Este método guarda el texto con la opción “Lazo abierto” o “Lazo cerrado” y así indicar al programa el modo de control. Este método se ejecuta al generarse un llamamiento al presionar alguno de los dos botones de selección. 
 
-startTest: Método que permite guardar las variables necesarias para registrar la prueba como es la fecha y el tiempo de inicio. También como de limpiar las variables que cambiaron al ejecutar la prueba. Por último, iniciar el hilo  “Do_every” que es un temporizador que gráfica y guarda cada vez que se cumple el tiempo de muestreo definido. 
+startTest: Método que permite guardar las variables necesarias para registrar la prueba como es la fecha y el tiempo de inicio. También como de limpiar las variables que cambiaron al ejecutar la prueba. Por último, iniciar el hilo  “Do_every” que es un temporizador que gráfica y guarda cada vez que se cumple el tiempo de muestreo definido. Este método se ejecuta al presionar el botón “Empezar”. 
+
+StopTest: Método que permite guardar las variables en memoria en el disco en un archivo en formato “.csv”. El método se ejecuta al presionar el botón de “Terminar”. 
