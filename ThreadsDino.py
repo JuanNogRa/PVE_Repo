@@ -1,5 +1,4 @@
 from PyQt5.QtCore import pyqtSignal,QThread
-from PyQt5 import QtCore
 from daqhats import mcc152, OptionFlags, HatIDs, HatError, mcc128, AnalogInputMode, AnalogInputRange
 from daqhats_utils import select_hat_device
 import config
@@ -100,8 +99,8 @@ class ReadVoltage(QThread):
         PWM_GPIO = 17
         #self.SAMPLE_TIME = 2.0
 
-        pi = pigpio.pi()
-        self.p = read_PWM.reader(pi, PWM_GPIO, MinimaFrecuencia)
+        self.pi = pigpio.pi()
+        self.p = read_PWM.reader(self.pi, PWM_GPIO, MinimaFrecuencia)
         self.counter_cycles=0
         
     def run(self):
@@ -156,6 +155,8 @@ class ReadVoltage(QThread):
                 #print('Tiempo '+str(end - start))
     def stop(self):
         self.ThreadActive = False
+        self.p.cancel()
+        self.pi.stop()
         self.quit()
         
 class Do_every(QThread):

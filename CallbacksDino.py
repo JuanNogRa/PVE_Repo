@@ -46,13 +46,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fecha_prueba = ''
         self.fecha_hora_inicio = ''
         self.fecha_hora_finalizacion = ''
-        self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0]])
+        
         self.potencia_acumulada=0
         self.Tasa_Muestreo=4
         self.muestreo_time=0.0
         self.ygraph=0.0
         self.startCalibration=False
         self.counter_muestra=0
+        #self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0]])
         
         self.SendVoltage = SendVoltage()
         self.ReadVoltage = ReadVoltage(self.MinimaFrecuencia)
@@ -75,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Celda2.toggled.connect(self.onClicked)
         self.Lazo_abierto.toggled.connect(self.ClickedLazo)
         self.Lazo_cerrado.toggled.connect(self.ClickedLazo)
-
+    
         n_data=900
         self.xdata = [x for x in list(range(n_data))]
         self.ydata = [x*0 for x in list(range(n_data))]
@@ -106,9 +107,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #Add legend
         self.msg = QMessageBox()
         self.msg.setWindowTitle("Calibración de celdas de carga")
-        self.FS = self.sistema_mamdani()
+        self.FS = self.sistema_sugeno()
         #self.graphWidget.showGrid(x=True, y=True)
-        
+    
+    def closeEvent(self, event):
+        self.ReadVoltage.stop()                
 
     def ParamsInput(self):
         self.pulsos_vuelta=float(self.Pulsos_value.text())
@@ -159,8 +162,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fecha_hora_inicio = self.fecha_hora_inicio.replace('/', '_').replace(' ', '-')
         self.pushButton_2.setEnabled(False)
         self.button_parametro.setEnabled(False)
-        self.Aplicar.setEnabled(False)
-        self.pushButton.setEnabled(True)
+        #self.Aplicar.setEnabled(False)
         self.potencia_acumulada = 0.0
         self.cuentas_distancia = 0
         self.startCalibration = True
@@ -169,6 +171,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.counter_muestra = 0        
         self.msg.setText('Calibrando offset celdas de carga espere hasta completar 500 muestras.')
         self.msg.exec_()
+        if self.Lazo=='Lazo abierto':
+            self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0]])
+        elif self.Lazo=='Lazo cerrado':
+            self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0]])
         if self.Do_every.isFinished:
             self.Do_every = Do_every(1/self.Tasa_Muestreo)
             self.Do_every.start()
@@ -186,16 +192,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                         ['Voltaje offset celda 1', self.offsetCelda1],
                                         ['Voltaje offset celda 2', self.offsetCelda2],
                                         ['Observaciones'+Observaciones]])
-        dataframe_datos = pd.DataFrame(self.dataforDataFrame,
+        if self.Lazo=='Lazo cerrado':
+            dataframe_datos = pd.DataFrame(self.dataforDataFrame,
                 columns=['Muestreo (s)','Cuentas de vueltas','Voltaje celda #1 (V)', 'Voltaje celda #2 (V)',
-                         'Velocidad medida (m/s)','Voltaje PAU (V)', 'Voltaje de excitacion (V)'])
+                         'Velocidad medida (m/s)','Voltaje PAU (V)', 'Voltaje de excitacion (V)',
+                         'Torque de referencia (N-m)', 'Voltaje de control difuso (V)'])
+        elif self.Lazo=='Lazo abierto':
+            dataframe_datos = pd.DataFrame(self.dataforDataFrame,
+                columns=['Muestreo (s)','Cuentas de vueltas','Voltaje celda #1 (V)', 'Voltaje celda #2 (V)',
+                         'Velocidad medida (m/s)','Voltaje PAU (V)', 'Voltaje de excitacion (V)'])            
         dataframe = pd.concat([dataframe_header, dataframe_datos], ignore_index=True)
         dataframe.to_csv('/home/usuario/PVE_Repo/Pruebas/'+self.fecha_prueba+'_'+self.fecha_hora_inicio+'.csv', index=False)
         self.dataforDataFrame=np.array([[0, 0, 0, 0, 0, 0, 0]])
         self.muestreo=0
         self.pushButton_2.setEnabled(True)
         self.button_parametro.setEnabled(True)
-        self.Aplicar.setEnabled(True)
+        #self.Aplicar.setEnabled(True)
         self.pushButton.setEnabled(False)
         self.Do_every.stop()
         
@@ -234,6 +246,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.msg.setText('Calibración del offset terminado.\nOffset Celda 1='+str(self.offsetCelda1)
               +'\nOffset Celda 2='+str(self.offsetCelda2))
                 self.msg.exec_()
+                self.pushButton.setEnabled(True)
  
     def FrecuencySlotUpdate(self, datos_frecuencia):
         frecuencia=datos_frecuencia[0]
@@ -286,35 +299,34 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         
         if(config.startTest_activacte==True):
-            if config.f:
+            if config.f:                 
+                velocidad = revoluciones*((self.diametro_rodillo*math.pi))
+                self.PotenciaAcu_value.setText('{:.5f}'.format(self.potencia_acumulada)+' N '+'m/s')
+                self.potencia_acumulada += potencia
+                self.muestreo += self.muestreo_time      
+                if self.Lazo=='Lazo abierto':
+                    self.dataforDataFrame = np.concatenate((self.dataforDataFrame, np.array([[self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
+                    (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje]])), axis=0)
                 if self.Lazo=='Lazo cerrado':
-                    
                     torque_actual = self.torque_celda_01 + self.torque_celda_02
                     error_torque = torque_actual - self.value
                     cambio_error_torque = error_torque - self.error_torque_anterior
                     
                     self.FS.set_variable("T", torque_actual)
                     self.FS.set_variable("ET", error_torque)
-                    self.FS.set_variable("CET", cambio_error_torque)
+                    #self.FS.set_variable("CET", cambio_error_torque)
                     self.FS.set_variable("RPM", revoluciones*60)
                     
                     #start=time.time()
-                    voltaje_control_difuso = self.FS.Mamdani_inference(["V"], ignore_warnings = True)
+                    voltaje_control_difuso = self.FS.Sugeno_inference(["V"], ignore_warnings = True)
                     #print(time.time()-start)
                     if voltaje_control_difuso['V'] > 0:
                         self.SendVoltage.main_sendVoltage(voltaje_control_difuso['V'])
                     self.error_torque_anterior = error_torque
-                    
-                    
-                velocidad = revoluciones*((self.diametro_rodillo*math.pi))
-                self.PotenciaAcu_value.setText('{:.5f}'.format(self.potencia_acumulada)+' N '+'m/s')
-                self.potencia_acumulada += potencia
-                self.muestreo += self.muestreo_time
-                self.dataforDataFrame = np.concatenate((self.dataforDataFrame, np.array([[self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
-                    (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje]])), axis=0)
+                    self.dataforDataFrame = np.concatenate((self.dataforDataFrame, np.array([[self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
+                    (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje, self.value, voltaje_control_difuso['V']]])), axis=0)
                 self.ygraph=velocidad*3.6
                 config.f=False
-                    
                 #self.Save=False
         
     def Time_MuestreoSlotUpdate(self, MuestreoTime):
@@ -328,17 +340,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.data_line2.setData(self.xdata, self.ydata2)  # Update the data.
             #print(sys.getsizeof(self.ydata))
 
-    def sistema_mamdani(self):
+    def sistema_sugeno(self):
         FS = FuzzySystem()
 
-        T_1 = FuzzySet(function=Triangular_MF(a=0, b=37, c=94), term="N")
-        T_2 = FuzzySet(function=Triangular_MF(a=37, b=94, c=175), term="MB")
-        T_3 = FuzzySet(function=Triangular_MF(a=94, b=175, c=270), term="B")
-        T_4 = FuzzySet(function=Triangular_MF(a=175, b=270, c=388), term="M")
-        T_5 = FuzzySet(function=Triangular_MF(a=270, b=388, c=520), term="A")
-        T_6 = FuzzySet(function=Triangular_MF(a=388, b=520, c=520), term="MA")
+        T_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=90), term="N")
+        T_2 = FuzzySet(function=Triangular_MF(a=10, b=100, c=190), term="MB")
+        T_3 = FuzzySet(function=Triangular_MF(a=110, b=200, c=290), term="B")
+        T_4 = FuzzySet(function=Triangular_MF(a=210, b=300, c=390), term="M")
+        T_5 = FuzzySet(function=Triangular_MF(a=310, b=400, c=490), term="A")
+        T_6 = FuzzySet(function=Triangular_MF(a=410, b=500, c=500), term="MA")
         LV1 = LinguisticVariable([T_1, T_2, T_3, T_4, T_5, T_6], concept="Torque Medido", universe_of_discourse=[0,500])
         FS.add_linguistic_variable("T", LV1)
+        #LV1.plot()
 
         RPM_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=50), term="N")
         RPM_2 = FuzzySet(function=Triangular_MF(a=0, b=50, c=100), term="B")
@@ -346,166 +359,175 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         RPM_4 = FuzzySet(function=Triangular_MF(a=450, b=550, c=550), term="A")
         LV2 = LinguisticVariable([RPM_1, RPM_2, RPM_3, RPM_4], concept="RPM Medido", universe_of_discourse=[0,550])
         FS.add_linguistic_variable("RPM", LV2)
+        #LV2.plot()
 
-        ET_1 = FuzzySet(function=Triangular_MF(a=-500, b=-500, c=-400), term="NMA")
-        ET_2 = FuzzySet(function=Triangular_MF(a=-500, b=-400, c=-300), term="NA")
-        ET_3 = FuzzySet(function=Triangular_MF(a=-400, b=-300, c=-200), term="NM")
-        ET_4 = FuzzySet(function=Triangular_MF(a=-300, b=-200, c=-100), term="NB")
-        ET_5 = FuzzySet(function=Triangular_MF(a=-200, b=-100, c=0), term="NMB")
-        ET_6 = FuzzySet(function=Triangular_MF(a=-100, b=-2, c=0), term="NN")
-        ET_7 = FuzzySet(function=Triangular_MF(a=0, b=2, c=100), term="PN")
-        ET_8 = FuzzySet(function=Triangular_MF(a=0, b=100, c=200), term="PMB")
-        ET_9 = FuzzySet(function=Triangular_MF(a=100, b=200, c=300), term="PB")
-        ET_10 = FuzzySet(function=Triangular_MF(a=200, b=300, c=400), term="PM")
-        ET_11 = FuzzySet(function=Triangular_MF(a=300, b=400, c=500), term="PA")
-        ET_12 = FuzzySet(function=Triangular_MF(a=400, b=500, c=500), term="PMA")
-        LV3 = LinguisticVariable([ET_1, ET_2, ET_3, ET_4, ET_5, ET_6, ET_7, ET_8, ET_9, ET_10, ET_11, ET_12], concept="Error de Torque", universe_of_discourse=[-500,500])
+        ET_1 = FuzzySet(function=Triangular_MF(a=-400, b=-400, c=-200), term="NMA")
+        ET_2 = FuzzySet(function=Triangular_MF(a=-400, b=-200, c=-100), term="NA")
+        ET_3 = FuzzySet(function=Triangular_MF(a=-200, b=-100, c=-50), term="NM")
+        ET_4 = FuzzySet(function=Triangular_MF(a=-100, b=-50, c=0), term="NB")
+        ET_5 = FuzzySet(function=Triangular_MF(a=-30, b=-1, c=0), term="NN")
+        ET_6 = FuzzySet(function=Triangular_MF(a=0, b=1, c=30), term="PN")
+        ET_7 = FuzzySet(function=Triangular_MF(a=0, b=50, c=100), term="PB")
+        ET_8 = FuzzySet(function=Triangular_MF(a=50, b=100, c=200), term="PM")
+        ET_9 = FuzzySet(function=Triangular_MF(a=100, b=200, c=400), term="PA")
+        ET_10 = FuzzySet(function=Triangular_MF(a=200, b=400, c=400), term="PMA")
+        LV3 = LinguisticVariable([ET_1, ET_2, ET_3, ET_4, ET_5, ET_6, ET_7, ET_8, ET_9, ET_10], concept="Error de Torque", universe_of_discourse=[-400,400])
         FS.add_linguistic_variable("ET", LV3)
+        #LV3.plot()
 
-        CET_1 = FuzzySet(function=Triangular_MF(a=-100, b=-100, c=-80), term="NMA")
-        CET_2 = FuzzySet(function=Triangular_MF(a=-100, b=-80, c=-60), term="NA")
-        CET_3 = FuzzySet(function=Triangular_MF(a=-80, b=-60, c=-40), term="NM")
-        CET_4 = FuzzySet(function=Triangular_MF(a=-60, b=-40, c=-20), term="NB")
-        CET_5 = FuzzySet(function=Triangular_MF(a=-40, b=-20, c=0), term="NMB")
-        CET_6 = FuzzySet(function=Triangular_MF(a=-20, b=0, c=20), term="N")
-        CET_7 = FuzzySet(function=Triangular_MF(a=0, b=20, c=40), term="PMB")
-        CET_8 = FuzzySet(function=Triangular_MF(a=20, b=40, c=60), term="PB")
-        CET_9 = FuzzySet(function=Triangular_MF(a=40, b=60, c=80), term="PM")
-        CET_10 = FuzzySet(function=Triangular_MF(a=60, b=80, c=100), term="PA")
-        CET_11 = FuzzySet(function=Triangular_MF(a=80, b=100, c=100), term="PMA")
-        LV4 = LinguisticVariable([CET_1, CET_2, CET_3, CET_4, CET_5, CET_6, CET_7, CET_8, CET_9, CET_10, CET_11], concept="Cambio en Error de Torque", universe_of_discourse=[-100,100])
-        FS.add_linguistic_variable("CET", LV4)
-
-        V_1 = FuzzySet(function=Triangular_MF(a=0, b=0, c=0.2), term="N")
-        V_2 = FuzzySet(function=Triangular_MF(a=0, b=0.2, c=0.4), term="MB")
-        V_3 = FuzzySet(function=Triangular_MF(a=0.2, b=0.4, c=0.6), term="B")
-        V_4 = FuzzySet(function=Triangular_MF(a=0.4, b=0.6, c=0.8), term="M")
-        V_5 = FuzzySet(function=Triangular_MF(a=0.6, b=0.8, c=1.0), term="A")
-        V_6 = FuzzySet(function=Triangular_MF(a=0.8, b=1.0, c=1.2), term="MA")
-        V_7 = FuzzySet(function=Triangular_MF(a=1.0, b=1.2, c=1.4), term="EA")
-        V_8 = FuzzySet(function=Triangular_MF(a=1.2, b=1.4, c=1.4), term="L")
-        LV5 = LinguisticVariable([V_1, V_2, V_3, V_4, V_5, V_6, V_7, V_8], concept="Voltaje de Control", universe_of_discourse=[0,1.4])
-        FS.add_linguistic_variable("V", LV5)
+        FS.set_crisp_output_value("N", 0.0)
+        FS.set_crisp_output_value("BB", 0.26036)
+        FS.set_crisp_output_value("B", 0.40563)
+        FS.set_crisp_output_value("BA", 0.53928)
+        FS.set_crisp_output_value("MB", 0.66133)
+        FS.set_crisp_output_value("M", 0.77176)
+        FS.set_crisp_output_value("MA", 0.87059)
+        FS.set_crisp_output_value("AB", 0.95781)
+        FS.set_crisp_output_value("A", 1.03341)
+        FS.set_crisp_output_value("AA", 1.09741)
+        FS.set_crisp_output_value("LB", 1.14979)
+        FS.set_crisp_output_value("L", 1.19057)
+        FS.set_crisp_output_value("LA", 1.21974)
 
         RULES = []
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS M)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS N)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MB)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS M)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS M)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS B)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS N)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS B)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS B)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MA) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MA) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MA) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND ((ET IS NN) OR (ET IS PN) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND (ET IS NB) THEN (V IS BB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND (ET IS NM) THEN (V IS B)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND (ET IS NA) THEN (V IS MB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS N) AND (ET IS NMA) THEN (V IS AB)")
 
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS N)")
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS N)")
-        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND (CET IS N) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS B)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND (ET IS NB) THEN (V IS BA)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND (ET IS NM) THEN (V IS MB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND (ET IS NA) THEN (V IS MA)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND (ET IS NMA) THEN (V IS AB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND (ET IS PB) THEN (V IS BB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MB) AND ((ET IS PM) OR (ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
 
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS N)")
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MB)")
-        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS M)")
-        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND (CET IS N) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS MA)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
-        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS NMB) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA) OR (CET IS N)) THEN (V IS L)")
-        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) AND ((CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS EA)")
-        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS NMB) OR (CET IS NB) OR (CET IS NM) OR (CET IS NA) OR (CET IS NMA)) THEN (V IS B)")
-        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS PMB) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) AND ((CET IS N) OR (CET IS PMB) OR (CET IS PB) OR (CET IS PM) OR (CET IS PA) OR (CET IS PMA)) THEN (V IS A)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS MB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND (ET IS NB) THEN (V IS M)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND (ET IS NM) THEN (V IS MA)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS NA) OR (ET IS NMA)) THEN (V IS AB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND (ET IS PB) THEN (V IS BA)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND (ET IS PM) THEN (V IS B)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS B) AND ((ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS MA)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND ((ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) THEN (V IS AB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND (ET IS PB) THEN (V IS M)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND (ET IS PM) THEN (V IS MB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND (ET IS PA) THEN (V IS B)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS M) AND (ET IS PMA) THEN (V IS N)")
+
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND ((ET IS NN) OR (ET IS PN) OR (ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA) OR (ET IS PB)) THEN (V IS AB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND (ET IS PM) THEN (V IS MA)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND (ET IS PA) THEN (V IS MB)")
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS A) AND (ET IS PMA) THEN (V IS N)")
+
+        RULES.append("IF ((RPM IS N) OR (RPM IS B)) AND (T IS MA) THEN (V IS AB)")
+
+        RULES.append("IF (RPM IS M) AND (T IS N) AND ((ET IS NN) OR (ET IS PN) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+        RULES.append("IF (RPM IS M) AND (T IS N) AND (ET IS NB) THEN (V IS BB)")
+        RULES.append("IF (RPM IS M) AND (T IS N) AND (ET IS NM) THEN (V IS B)")
+        RULES.append("IF (RPM IS M) AND (T IS N) AND (ET IS NA) THEN (V IS MB)")
+        RULES.append("IF (RPM IS M) AND (T IS N) AND (ET IS NMA) THEN (V IS A)")
+
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS B)")
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND (ET IS NB) THEN (V IS BA)")
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND (ET IS NM) THEN (V IS MB)")
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND (ET IS NA) THEN (V IS MA)")
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND (ET IS NMA) THEN (V IS LB)")
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND (ET IS PB) THEN (V IS BB)")
+        RULES.append("IF (RPM IS M) AND (T IS MB) AND ((ET IS PM) OR (ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS MB)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND (ET IS NB) THEN (V IS M)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND (ET IS NM) THEN (V IS MA)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND (ET IS NA) THEN (V IS A)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND (ET IS NMA) THEN (V IS LA)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND (ET IS PB) THEN (V IS BA)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND (ET IS PM) THEN (V IS B)")
+        RULES.append("IF (RPM IS M) AND (T IS B) AND ((ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS M) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS MA)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS NB) THEN (V IS AB)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS NM) THEN (V IS A)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS NA) THEN (V IS LB)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS NMA) THEN (V IS LA)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS PB) THEN (V IS M)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS PM) THEN (V IS MB)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS PA) THEN (V IS B)")
+        RULES.append("IF (RPM IS M) AND (T IS M) AND (ET IS PMA) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS A)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND (ET IS NB) THEN (V IS AA)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND (ET IS NM) THEN (V IS LB)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND ((ET IS NA) OR (ET IS NMA)) THEN (V IS LA)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND (ET IS PB) THEN (V IS AB)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND (ET IS PM) THEN (V IS MA)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND (ET IS PA) THEN (V IS MB)")
+        RULES.append("IF (RPM IS M) AND (T IS A) AND (ET IS PMA) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS LB)")
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND (ET IS NB) THEN (V IS L)")
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND ((ET IS NM) OR (ET IS NA) OR (ET IS NMA)) THEN (V IS LA)")
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND (ET IS PB) THEN (V IS AA)")
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND (ET IS PM) THEN (V IS A)")
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND (ET IS PA) THEN (V IS AB)")
+        RULES.append("IF (RPM IS M) AND (T IS MA) AND (ET IS PMA) THEN (V IS B)")
+
+        RULES.append("IF (RPM IS A) AND (T IS N) AND ((ET IS NN) OR (ET IS PN) OR (ET IS PB) OR (ET IS PM) OR (ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+        RULES.append("IF (RPM IS A) AND (T IS N) AND (ET IS NB) THEN (V IS B)")
+        RULES.append("IF (RPM IS A) AND (T IS N) AND (ET IS NM) THEN (V IS BA)")
+        RULES.append("IF (RPM IS A) AND (T IS N) AND (ET IS NA) THEN (V IS M)")
+        RULES.append("IF (RPM IS A) AND (T IS N) AND (ET IS NMA) THEN (V IS A)")
+
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS BA)")
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND (ET IS NB) THEN (V IS MB)")
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND (ET IS NM) THEN (V IS M)")
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND (ET IS NA) THEN (V IS AB)")
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND (ET IS NMA) THEN (V IS L)")
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND (ET IS PB) THEN (V IS B)")
+        RULES.append("IF (RPM IS A) AND (T IS MB) AND ((ET IS PM) OR (ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS M)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND (ET IS NB) THEN (V IS MA)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND (ET IS NM) THEN (V IS AB)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND (ET IS NA) THEN (V IS AA)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND (ET IS NMA) THEN (V IS LA)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND (ET IS PB) THEN (V IS MB)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND (ET IS PM) THEN (V IS BA)")
+        RULES.append("IF (RPM IS A) AND (T IS B) AND ((ET IS PA) OR (ET IS PMA)) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS A) AND (T IS M) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS AB)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS NB) THEN (V IS A)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS NM) THEN (V IS AA)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS NA) THEN (V IS L)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS NMA) THEN (V IS LA)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS PB) THEN (V IS MA)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS PM) THEN (V IS M)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS PA) THEN (V IS BA)")
+        RULES.append("IF (RPM IS A) AND (T IS M) AND (ET IS PMA) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS AA)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND (ET IS NB) THEN (V IS LB)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND (ET IS NM) THEN (V IS L)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND ((ET IS NA) OR (ET IS NMA)) THEN (V IS LA)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND (ET IS PB) THEN (V IS A)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND (ET IS PM) THEN (V IS AB)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND (ET IS PA) THEN (V IS M)")
+        RULES.append("IF (RPM IS A) AND (T IS A) AND (ET IS PMA) THEN (V IS N)")
+
+        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS NN) OR (ET IS PN)) THEN (V IS L)")
+        RULES.append("IF (RPM IS A) AND (T IS MA) AND ((ET IS NB) OR (ET IS NM) OR (ET IS NA) OR (ET IS NMA)) THEN (V IS LA)")
+        RULES.append("IF (RPM IS A) AND (T IS MA) AND (ET IS PB) THEN (V IS LB)")
+        RULES.append("IF (RPM IS A) AND (T IS MA) AND (ET IS PM) THEN (V IS AA)")
+        RULES.append("IF (RPM IS A) AND (T IS MA) AND (ET IS PA) THEN (V IS A)")
+        RULES.append("IF (RPM IS A) AND (T IS MA) AND (ET IS PMA) THEN (V IS BA)")
 
         FS.add_rules(RULES)
         return FS
+        
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     window = MainWindow()
