@@ -14,4 +14,8 @@ CloseEvent: Este método se utiliza para ejecutar el método stop() de la clase 
 
 ParamsInput: Este método se utiliza para definir los parámetros del dinamómetro si el mismo es cambiado. Estos parámetros son pulsos por vuelta, diámetro del rodillo y sensibilidad de celdas de carga. 
 
+DACVoltageDC: Este método se ejecuta al presionar el botón “Aplicar” y dependiendo del modo de control la salida de voltaje es el que se digita en el campo de edición de texto para cuando el lazo está abierto o el torque de referencia cuando el sistema de control está en lazo cerrado. 
 
+listVelocidad  y listDistance: Los métodos listVelocidad  y listDistance son para tomar el campo seleccionado de texto correspondiente en la QList y almacenarlo en una variable para cambiar las unidades de velocidad y de distancia a las deseadas. 
+
+OnClicked: Este método guarda el texto del botón de selección activado para luego cambiar las unidades de medición de las celdas de carga a las deseadas. 
