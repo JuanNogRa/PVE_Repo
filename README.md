@@ -36,3 +36,5 @@ sistema_sugeno: método donde se tiene el sistema de control basado en lógica d
 
 ## Descripción del módulo ThreadsDino.py 
 En este módulo están todos los procesos en paralelo necesarios para usar la aplicación, los cuales están divido en los siguientes QThreads (hilos usando la librería PyQt5): ReadVoltage y Do_every. Y también la clase SendVoltage. 
+
+SendVoltage: en esta clase se hace uso de la librería para generar señales de voltaje análogo utilizando el dispositivo MCC152 Voltage Output and DIO DAQ HAT for Raspberry Pi (mccdaq.com). En primera instancia se ejecuta el método “main_sendVoltage” donde se configura el dispositivo en este caso se deja el default y el canal a utilizar. En “get_input_value” se valida la entrada de voltaje ingresada por el usuario por medio de la interfaz de usuario. El voltaje es generado por el método “a_out_write” de la librería del dispositivo MCC152 con el voltaje validado.
