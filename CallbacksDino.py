@@ -2,12 +2,10 @@ from provisional_gui import *
 from ThreadsDino import *
 import math
 import config
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 from datetime import datetime
 import pandas as pd
 import time
-from pyqtgraph import PlotWidget, plot
 import pyqtgraph as pg
 from simpful import *
 import numpy as np
@@ -18,22 +16,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
         self.setupUi(self)
        
-        self.Factor_Amplificacion = 100
-        self.Facto_Atenuacion = 20.1
-        self.divisor_Voltaje = 3
-        self.pulsos_vuelta = 60
-        self.offset_pau = 0.00682
-        self.diametro_rodillo = 19.75*0.0254
-        self.sensibilidad_celdas = 3
-        self.frecuencia = 0
+        self.Factor_Amplificacion = 100          # Factor de amplificación del voltaje diferencial de las celdas de carga.
+        self.Facto_Atenuacion = 20.1             # Factor de atenuacion del voltaje de las PAU
+        self.divisor_Voltaje = 3                 # Factor para obtener el voltaje del divisor de voltaje para las PAU y la excitación de los sensores
+        self.pulsos_vuelta = 60                  # Cantidad de pulsos que entrega el rodillo por vuelta. Para el dinamometro usado por default es 60
+        self.offset_pau = 0.00682                # Offset del voltaje sensado en las PAU
+        self.diametro_rodillo = 19.75*0.0254     # Diametro del rodillo del dinamómetro en metros. Para el dinametro usado es de 0.50165
+        self.sensibilidad_celdas = 3             # Sensibilidad de las celdas de carga. Por default es de 3mV/V
+        self.frecuencia = 0                      # Declaración de la variable de frecuencia
         self.capacidad_celdas = 2000             # Capacidad de las celdas de carga en libras.
         self.factor_libras_kilos = 2.205         # Factor de conversión de libras a kilogramos.
-        self.factor_kilos_newton = 9.80665
-        self.cuentas_distancia = 0
-        self.muestreo = 0
-        self.MinimaFrecuencia = (0.05*self.pulsos_vuelta)/(self.diametro_rodillo*math.pi)
-        self.offsetCelda1 = 0.0
-        self.offsetCelda2 = 0.0
+        self.factor_kilos_newton = 9.80665       # Factor de conversión de peso a torque
+        self.cuentas_distancia = 0               # Declaración de la variable para llevar las cuentas de flancos de subida para calcular la distancia recorrida
+        self.muestreo = 0                        # Declaración de la variable para registrar el valor de muestreo deseado
+        self.MinimaFrecuencia = (0.05*self.pulsos_vuelta)/(self.diametro_rodillo*math.pi) #Minima frecuencia en el PIN GPIO 17 a sensar para 0.05 m/s 
+        self.offsetCelda1 = 0.0                  #Declaración de la variable para guardar el offset de la celda de carga 1
+        self.offsetCelda2 = 0.0                  #Declaración de la variable para guardar el offset de la celda de carga 1
         self.error_torque_anterior = 0.0
         #self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
             #f(*args)
@@ -46,6 +44,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fecha_prueba = ''
         self.fecha_hora_inicio = ''
         self.fecha_hora_finalizacion = ''
+        self.path=''
         
         self.potencia_acumulada=0
         self.Tasa_Muestreo=4
@@ -53,6 +52,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.ygraph=0.0
         self.startCalibration=False
         self.counter_muestra=0
+        self.CycleActivate = False
         #self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0]])
         
         self.SendVoltage = SendVoltage()
@@ -63,6 +63,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.button_parametro.clicked.connect(lambda: self.ParamsInput())
         self.pushButton_2.clicked.connect(lambda: self.startTest())
         self.pushButton.clicked.connect(lambda: self.stopTest())
+        self.Load_file.clicked.connect(lambda: self.CicloManejoPath())
+        self.Accept.clicked.connect(lambda: self.CicloManejoAccept())
         self.ReadVoltage.start()
         self.ReadVoltage.VoltageUpdate.connect(self.VoltageSlotUpdate)
         self.ReadVoltage.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
@@ -78,6 +80,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.Lazo_cerrado.toggled.connect(self.ClickedLazo)
     
         n_data=900
+        self.cycledrive_data = np.array([])
         self.xdata = [x for x in list(range(n_data))]
         self.ydata = [x*0 for x in list(range(n_data))]
         self.ydata1 = [x*0 for x in list(range(n_data))]
@@ -85,13 +88,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graphWidget = pg.PlotWidget()
         self.Senales.addWidget(self.graphWidget)
         self.graphWidget.setBackground('w')
-
+        self.graphWidget.addLegend(labelTextColor='black',labelTextSize='13pt')
+        
         pen = pg.mkPen(color=(255, 0, 0), width=5)
+        pen2 = pg.mkPen(color=(0, 180, 100), width=5, style=QtCore.Qt.DashLine)
         self.graphWidget.setTitle("Señal medida de velocidad", color="black", size="20pt")
-        self.data_line =  self.graphWidget.plot(self.xdata, self.ydata, pen=pen)# added
+        self.data_line =  self.graphWidget.plot(self.xdata, self.ydata, name = "Velocidad actual", pen=pen)# added
+            #self.graphWidget.setTitle("Señal medida de velocidad", color="black", size="20pt")
+        self.data_line3=self.graphWidget.plot(self.xdata, self.ydata, name = "Velocidad ciclo de manejo", pen=pen2)# added
         styles = {'color':'black', 'font-size':'15px'}
         self.graphWidget.setLabel('left', 'Velocidad (km/h)', **styles)
-        self.graphWidget.setLabel('bottom', 'Tiempo (s)', **styles)
+        self.graphWidget.setLabel('bottom', '# Muestras', **styles)
 
         self.graphWidget1 = pg.PlotWidget()
         self.Senales1.addWidget(self.graphWidget1)
@@ -101,12 +108,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         pen1 = pg.mkPen(color=(255, 0, 255), width=5)
         self.graphWidget1.setTitle("Señal medida de celdas de carga", color="black", size="20pt")
         self.data_line1 =  self.graphWidget1.plot(self.xdata, self.ydata1, name = "Celda de carga 1", pen=pen)# added
-        self.data_line2 =  self.graphWidget1.plot(self.xdata, self.ydata2, name = "Celda de carga 2",pen=pen1)# added
+        self.data_line2 =  self.graphWidget1.plot(self.xdata, self.ydata2, name = "Celda de carga 2", pen=pen1)# added
         self.graphWidget1.setLabel('left', 'Torque (N-m)', **styles)
-        self.graphWidget1.setLabel('bottom', 'Tiempo (s)', **styles)
+        self.graphWidget1.setLabel('bottom', '# Muestras', **styles)
         #Add legend
         self.msg = QMessageBox()
-        self.msg.setWindowTitle("Calibración de celdas de carga")
+        self.msg.setWindowTitle("Panel de información")
         self.FS = self.sistema_sugeno()
         #self.graphWidget.showGrid(x=True, y=True)
     
@@ -153,6 +160,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         elif self.Lazo=='Lazo cerrado':
             self.OutputText.setTitle("Torque de referencia en lazo cerrado (N-m)")
     
+    def CicloManejoPath(self):
+        filename = QFileDialog.getOpenFileName()
+        self.path=filename[0]
+        self.Path.setText(self.path)
+    
+    def CicloManejoAccept(self):
+        if self.path !='':
+            df = pd.read_csv(self.path)
+            styles = {'color':'black', 'font-size':'15px'}
+            self.graphWidget.setLabel('bottom', 'Tiempo (s)', **styles)
+            self.cycledrive_data=df.to_numpy()
+            self.data_line3.setData(self.cycledrive_data[:,0],  self.cycledrive_data[:,1])  # Update the data.
+            self.msg.setText('El sistema esta en el modo de ciclo de conducción.')
+            self.msg.exec_()
+
     def startTest(self):
         self.start=time.time()
         self.Tasa_Muestreo = float(self.Frecuencia_value.text())
@@ -168,7 +190,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.startCalibration = True
         self.offsetCelda1 = 0.0
         self.offsetCelda2 = 0.0
-        self.counter_muestra = 0        
+        self.counter_muestra = 0   
         self.msg.setText('Calibrando offset celdas de carga espere hasta completar 500 muestras.')
         self.msg.exec_()
         if self.Lazo=='Lazo abierto':
@@ -205,6 +227,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dataframe.to_csv('/home/usuario/PVE_Repo/Pruebas/'+self.fecha_prueba+'_'+self.fecha_hora_inicio+'.csv', index=False)
         self.dataforDataFrame=np.array([[0, 0, 0, 0, 0, 0, 0]])
         self.muestreo=0
+        self.CycleActivate = False
         self.pushButton_2.setEnabled(True)
         self.button_parametro.setEnabled(True)
         #self.Aplicar.setEnabled(True)
@@ -247,7 +270,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
               +'\nOffset Celda 2='+str(self.offsetCelda2))
                 self.msg.exec_()
                 self.pushButton.setEnabled(True)
- 
+
     def FrecuencySlotUpdate(self, datos_frecuencia):
         frecuencia=datos_frecuencia[0]
         self.cuentas_distancia=datos_frecuencia[1]
@@ -296,8 +319,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         self.Fuerza_value.setText('{:.5f}'.format(fuerza)+' N')
         self.Potencia_value.setText('{:.5f}'.format(potencia)+' N '+'m/s')
-        
-        
         if(config.startTest_activacte==True):
             if config.f:                 
                 velocidad = revoluciones*((self.diametro_rodillo*math.pi))
@@ -308,37 +329,43 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                     self.dataforDataFrame = np.concatenate((self.dataforDataFrame, np.array([[self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
                     (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje]])), axis=0)
                 if self.Lazo=='Lazo cerrado':
-                    torque_actual = self.torque_celda_01 + self.torque_celda_02
-                    error_torque = torque_actual - self.value
-                    cambio_error_torque = error_torque - self.error_torque_anterior
-                    
-                    self.FS.set_variable("T", torque_actual)
-                    self.FS.set_variable("ET", error_torque)
-                    #self.FS.set_variable("CET", cambio_error_torque)
-                    self.FS.set_variable("RPM", revoluciones*60)
-                    
-                    #start=time.time()
-                    voltaje_control_difuso = self.FS.Sugeno_inference(["V"], ignore_warnings = True)
-                    #print(time.time()-start)
-                    if voltaje_control_difuso['V'] > 0:
-                        self.SendVoltage.main_sendVoltage(voltaje_control_difuso['V'])
-                    self.error_torque_anterior = error_torque
-                    self.dataforDataFrame = np.concatenate((self.dataforDataFrame, np.array([[self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
-                    (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje, self.value, voltaje_control_difuso['V']]])), axis=0)
+                        torque_actual = self.torque_celda_01 + self.torque_celda_02
+                        error_torque = torque_actual - self.value
+                        #cambio_error_torque = error_torque - self.error_torque_anterior
+                        
+                        self.FS.set_variable("T", torque_actual)
+                        self.FS.set_variable("ET", error_torque)
+                        #self.FS.set_variable("CET", cambio_error_torque)
+                        self.FS.set_variable("RPM", revoluciones*60)
+                        
+                        #start=time.time()
+                        voltaje_control_difuso = self.FS.Sugeno_inference(["V"], ignore_warnings = True)
+                        #print(time.time()-start)
+                        if voltaje_control_difuso['V'] > 0:
+                            self.SendVoltage.main_sendVoltage(voltaje_control_difuso['V'])
+                        self.error_torque_anterior = error_torque
+                        self.dataforDataFrame = np.concatenate((self.dataforDataFrame, np.array([[self.muestreo, self.cuentas_distancia ,self.Voltage[0]/self.Factor_Amplificacion, self.Voltage[2]/self.Factor_Amplificacion, velocidad, 
+                        (self.Voltage[1]-self.offset_pau)*(self.divisor_Voltaje*self.Facto_Atenuacion), self.Voltage[3]*self.divisor_Voltaje, self.value, voltaje_control_difuso['V']]])), axis=0)
+                #print(sys.getsizeof(self.ydata))
                 self.ygraph=velocidad*3.6
                 config.f=False
                 #self.Save=False
         
     def Time_MuestreoSlotUpdate(self, MuestreoTime):
         self.muestreo_time=MuestreoTime
-        if config.f:
-            self.ydata = self.ydata[1:] + [self.ygraph]  # Remove the first
-            self.data_line.setData(self.xdata, self.ydata)  # Update the data.
-            self.ydata1 = self.ydata1[1:] + [self.torque_celda_01]  # Remove the first
-            self.data_line1.setData(self.xdata, self.ydata1)  # Update the data.
-            self.ydata2 = self.ydata2[1:] + [self.torque_celda_02]  # Remove the first
-            self.data_line2.setData(self.xdata, self.ydata2)  # Update the data.
-            #print(sys.getsizeof(self.ydata))
+        if(config.startTest_activacte==True):
+            if config.f:
+                #self.xdata = self.xdata[1:] + [self.muestreo]  # Remove the first
+                if self.CycleActivate:
+                    index = int(self.muestreo*self.muestreo_time)
+                    self.data_line3.setData(self.cycledrive_data[:,0],  self.cycledrive_data[:,1])  # Update the data.
+                self.ydata = self.ydata[1:] + [self.ygraph]  # Remove the first
+                self.data_line.setData(self.xdata, self.ydata)  # Update the data.
+                self.ydata1 = self.ydata1[1:] + [self.torque_celda_01]  # Remove the first
+                self.data_line1.setData(self.xdata, self.ydata1)  # Update the data.
+                self.ydata2 = self.ydata2[1:] + [self.torque_celda_02]  # Remove the first
+                self.data_line2.setData(self.xdata, self.ydata2)  # Update the data.
+                
 
     def sistema_sugeno(self):
         FS = FuzzySystem()

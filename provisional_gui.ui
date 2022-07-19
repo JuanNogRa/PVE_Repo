@@ -595,6 +595,17 @@ recorrida:</string>
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="Accept">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>Images/Accept.png</normaloff>Images/Accept.png</iconset>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
           </layout>
