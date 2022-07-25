@@ -36,32 +36,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #self.ReadFrecuency.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
             #f(*args)
         
-        self.value=''
-        self.VTorque = 'Voltage (V)'
-        self.Lazo = 'Lazo abierto'
-        self.torque_celda_01 = 0
-        self.torque_celda_02 = 0
-        self.fecha_prueba = ''
-        self.fecha_hora_inicio = ''
-        self.fecha_hora_finalizacion = ''
-        self.path=''
+        self.value=''                           #Declaración de la variable guardar el valor en el campo de texto el voltaje o torque deseado
+        self.VTorque = 'Voltage (V)'            #Declaración de variable para controlar la representación de la señal leida en las celdas de carga siendo: voltaje, torque y masa
+        self.Lazo = 'Lazo abierto'              #Declaración de la variable para controlar el modo de control siendo las opciones: lazo abierto o cerrado
+        self.torque_celda_01 = 0                #Declaración de la variable donde se guardar el torque calculado con el voltage leido en el canal correspondiente a la celda de carga 1
+        self.torque_celda_02 = 0                #Declaración de la variable donde se guardar el torque calculado con el voltage leido en el canal correspondiente a la celda de carga 2
+        self.fecha_prueba = ''                  #Declaracion de la variable donde se guardar la fecha del sistema cuando se inicia la prueba
+        self.fecha_hora_inicio = ''             #Declaración de la variable donde se guardar la hora del sistema  cuando se inicia la prueba
+        self.fecha_hora_finalizacion = ''       #Declaración de la variable donde se guardar la hora del sistema  cuando se termina la prueba
+        self.path=''                            #Declaración de la variable donde se guardar la dirección del archivo .csv donde esta el perfil de velocidad
+
+        self.potencia_acumulada=0               #Declaración de la variable donde se guardar el acumulado de la potencia
+        self.Tasa_Muestreo=4                    #Declaración de la variable donde se guardar la tasa de muestreo
+        self.muestreo_time=0.0                  #Declaración de la variable donde se guardar el tiempo que dura la adquisicón de una muestra
+        self.ygraph=0.0                         #Declaración de la variable donde se guardar la ultima velocidad registrada
+        self.startCalibration=False             #Declaración de la variable para controlar que se esta calibrando el offset del par de celdas de carga
+        self.counter_muestra=0                  #Declaración de la variable para guardar la cantidad flancos de subidas del lector de frecuencia
+        self.CycleActivate = False              #Declaracion de la variable para controlar si se va realizar la prueba teniendo en cuenta el perfil de conduccion
         
-        self.potencia_acumulada=0
-        self.Tasa_Muestreo=4
-        self.muestreo_time=0.0
-        self.ygraph=0.0
-        self.startCalibration=False
-        self.counter_muestra=0
-        self.CycleActivate = False
-        #self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0]])
-        
-        self.SendVoltage = SendVoltage()
-        self.ReadVoltage = ReadVoltage(self.MinimaFrecuencia)
-        self.Do_every = Do_every(1/self.Tasa_Muestreo)
-        self.pushButton.setEnabled(False)
-        self.Aplicar.clicked.connect(lambda: self.DACVoltageDC())
-        self.button_parametro.clicked.connect(lambda: self.ParamsInput())
-        self.pushButton_2.clicked.connect(lambda: self.startTest())
+        self.SendVoltage = SendVoltage()                                    #Declaracion del objeto para utilizar la clase SendVoltage del modulo ThreadsDino para salida de voltaje analogo controlado o en lazo abierto
+        self.ReadVoltage = ReadVoltage(self.MinimaFrecuencia)               #Declaracion del objeto para utilizar la clase ReadVoltage del modulo ThreadsDino para las entradas de voltaje analogo  
+        self.Do_every = Do_every(1/self.Tasa_Muestreo)                      #Declaracion del objeto para utilizar la clase Do_every del modulo ThreadsDino para que el tiempo de muestreo sea el definido por el usuario
+        self.pushButton.setEnabled(False)                                   #Metodo de PyQt para deshabilitar el boton "Empezar" 
+        self.Aplicar.clicked.connect(lambda: self.DACVoltageDC())           #Metodo de PyQt para conectar el callback generado al presionar el boton "Empezar" con el metodo DACVoltageDC
+        self.button_parametro.clicked.connect(lambda: self.ParamsInput())   #Metodo de PyQt para conectar el callback generado al presionar el boton "Aplicar Parametros" con el metodo ParamsInput
+        self.pushButton_2.clicked.connect(lambda: self.startTest())         #Metodo de PyQt para conectar el callback generado al presionar el boton "Terminar" con el metodo startTest
         self.pushButton.clicked.connect(lambda: self.stopTest())
         self.Load_file.clicked.connect(lambda: self.CicloManejoPath())
         self.Accept.clicked.connect(lambda: self.CicloManejoAccept())
