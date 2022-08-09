@@ -41,8 +41,9 @@ class UI(QMainWindow):
 		self.cdaq_data = {}
 		self.sensors_data = {}
 
-		self.xdata = []
-		self.ydata = [[]]
+		self.xdata = [x for x in list(range(15))]
+		self.ydata = [x*0 for x in list(range(15))]
+		self.ydata = [self.ydata, self.ydata, self.ydata, self.ydata,self.ydata,self.ydata]
 		self.line1 = None
 		self.line2 = None
 		self.line3 = None
@@ -252,7 +253,7 @@ class UI(QMainWindow):
 			if index!=self.tab_index:
 				self.tabs_pruebas.setTabEnabled(index,False)
 
-		self.timer.setInterval(80)
+		self.timer.setInterval(100)
 		self.timer.timeout.connect(self.update_plot)
 		self.timer.start()
 
@@ -267,15 +268,17 @@ class UI(QMainWindow):
 		self.button_start.setEnabled(True)
 		self.button_stop.setEnabled(False)
 		self.combo_prueba.setEnabled(True)
-
 		for index in (0,1,2,3,4):
 			self.tabs_pruebas.setTabEnabled(index,True)
 
 	@pyqtSlot()
 	def cambiar_fase(self):
-		self.ydata = []
-		self.xdata = []
+		self.xdata = [x for x in list(range(15))]
+		self.ydata = [x*0 for x in list(range(15))]
+		self.ydata = [self.ydata, self.ydata, self.ydata, self.ydata,self.ydata,self.ydata]
 		self.t = -0.1
+		
+		
 		self.fase_frenado = self.fase_frenado + 1
 		if self.fase_frenado>5:
 			self.fase_frenado=1
@@ -476,7 +479,7 @@ class UI(QMainWindow):
 	
 	def update_cdaq_data(self,data):
 		for i,v in data.items():
-			self.cdaq_data[i] = v[0]
+			self.cdaq_data[i] = v[-1]
 
 	def update_plot(self):
 		#print(f'Print labels: {val}')
@@ -541,15 +544,10 @@ class UI(QMainWindow):
 			self.label_e_vx.setText(f'{vx}')
 			self.label_e_ay.setText(f'{gins["acc_x"]}') # Aceleración lateral
 			self.label_e_delta.setText(f'{cdaq["Vol"]}')
-			if self.t>0:
-				self.line2.clear()
-			else:
-				self.ydata = [[],[],[]]
-			if len(self.xdata)>=15:
-				del self.xdata[0]
-				for f in self.ydata:
-					del f[0]
+			
+			self.xdata = self.xdata[1:]
 			self.xdata.append(self.t)
+			self.ydata = self.ydata[:][1:]
 			self.ydata[0].append(vx)
 			self.ydata[1].append(gins["acc_x"])
 			self.ydata[2].append(cdaq["Vol"])
@@ -842,9 +840,9 @@ class CDaq(QThread):
 	devC.reserve_network_device(True)
 	min_V = -10
 	max_V = 10
-	data_task1=np.zeros((1, 12000))
-	data_task2=np.zeros((7, 12000))
-	data_task3=np.zeros((3, 12000))
+	data_task1=np.zeros((1, 1200))
+	data_task2=np.zeros((7, 1200))
+	data_task3=np.zeros((3, 1200))
 
 	
 	def __init__(self,index=0,parent=None):
@@ -963,6 +961,7 @@ class CDaq(QThread):
                                    timeout=constants.WAIT_INFINITELY)
 		# Convert the data from channel as a row order to channel as a column
 		self.data_task3 = buffertask3
+		self.datos=self.list2dict()
 		return 0
 		
 	def run(self):
@@ -972,15 +971,15 @@ class CDaq(QThread):
 			#time.sleep(0.000001)
 			if not self.is_running:
 				break
-			t1 = time.time()
+			#t1 = time.time()
 				#time.sleep(0.000001)
-			self.datos=self.list2dict()
+			
 				#time.sleep(0.000001)
 			self.data.emit(self.datos)					
-			t = time.time() - t1
+			#t = time.time() - t1
 			#self.datos["t_cdaq"] = t
 			#print(str(self.datos["AccX"])+str(self.datos["AccX"][0]))
-			print(f't_cdaq={t*1000}ms')
+			#print(f't_cdaq={t*1000}ms')
 			#self.datos["t_cdaq"] = t
 
 	def stop(self):
