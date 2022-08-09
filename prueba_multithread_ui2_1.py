@@ -41,14 +41,14 @@ class UI(QMainWindow):
 		self.cdaq_data = {}
 		self.sensors_data = {}
 
-		self.xdata = [x for x in list(range(15))]
+		self.xdata = [x*0.1 for x in list(range(15))]
 		self.ydata = [x*0 for x in list(range(15))]
 		self.ydata = [self.ydata, self.ydata, self.ydata, self.ydata,self.ydata,self.ydata]
 		self.line1 = None
 		self.line2 = None
 		self.line3 = None
 		self.t = -0.1
-
+		self.line3 = self.vib_widget_plot.plot(self.xdata,self.ydata[0],pen=self.red_pen,symbol='+', symbolSize=10, symbolBrush=('b'))
 		self.start_workers()
 
 		self.timer = QTimer()
@@ -226,7 +226,7 @@ class UI(QMainWindow):
 		self.vib_widget_plot = self.findChild(PlotWidget,"vib_widget_plot")
 		self.vib_widget_plot.setBackground('w')
 
-		self.red_pen = mkPen(color=(255, 0, 0), width=4)
+		self.red_pen = mkPen(color=(255, 0, 0), width=1)
 
 		finish = QAction("Quit", self)
 		finish.triggered.connect(self.closeEvent)
@@ -237,8 +237,9 @@ class UI(QMainWindow):
 	def tab_change(self):
 		self.tab_index = self.tabs_pruebas.currentIndex()
 		print(f'Current tab: {self.tab_index}')
-		self.ydata = []
-		self.xdata = []
+		self.xdata = [x*0.1 for x in list(range(15))]
+		self.ydata = [x*0 for x in list(range(15))]
+		self.ydata = [self.ydata, self.ydata, self.ydata, self.ydata,self.ydata,self.ydata]
 		self.t = -0.1
 
 	@pyqtSlot()
@@ -547,7 +548,6 @@ class UI(QMainWindow):
 			
 			self.xdata = self.xdata[1:]
 			self.xdata.append(self.t)
-			self.ydata = self.ydata[:][1:]
 			self.ydata[0].append(vx)
 			self.ydata[1].append(gins["acc_x"])
 			self.ydata[2].append(cdaq["Vol"])
@@ -558,20 +558,16 @@ class UI(QMainWindow):
 			self.label_v_ax.setText(f'{cdaq["AccY"]}')
 			self.label_v_ay.setText(f'{cdaq["AccX"]}') # Aceleración lateral
 			self.label_v_az.setText(f'{cdaq["AccZ"]}')
-			if self.t>0:
-				self.line3.clear()
-			else:
-				self.ydata = [[],[],[]]
-			if len(self.xdata)>=15:
-				del self.xdata[0]
-				for f in self.ydata:
-					del f[0]
-			self.xdata.append(self.t)
+
+			self.ydata[0] = self.ydata[0][1:]  # Remove the first
+			self.ydata[1] = self.ydata[1][1:]  # Remove the first
+			self.ydata[2] = self.ydata[2][1:]  # Remove the first	
+			
 			self.ydata[0].append(cdaq["AccY"])
 			self.ydata[1].append(cdaq["AccX"])
 			self.ydata[2].append(cdaq["AccZ"])
 			i = self.combo_v_plot.currentIndex()
-			self.line3 = self.vib_widget_plot.plot(self.xdata,self.ydata[i],pen=self.red_pen,symbol='+', symbolSize=10, symbolBrush=('b'))
+			self.line3.setData(self.xdata, self.ydata[i])  # Update the data.
 		
 		if self.tabs_pruebas.currentIndex()==4: #Modo de prueba
 			if self.combo_prueba.currentIndex()==0: #cDAQ-9188
