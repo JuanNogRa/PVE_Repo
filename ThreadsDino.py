@@ -6,6 +6,7 @@ import pigpio
 import read_PWM
 import time
 import matplotlib
+import socket
 matplotlib.use('Qt5Agg')
 
 """Hilo para generar voltaje usando el MCC 152."""
@@ -180,6 +181,48 @@ class Do_every(QThread):
             t += self.period
             yield max(t - time.time(),0)
                 
+    def stop(self):
+        self.ThreadActive = False
+        self.quit()
+
+class SocketComunication(QThread):
+    Client_address = pyqtSignal(tuple)
+    
+    def __init__(self, HOST):
+        QThread.__init__(self)
+        self.HOST=HOST
+        
+    def run(self):
+        self.ThreadActive=True
+        # Create a TCP/IP socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # Bind the socket to the address given on the command line
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((self.HOST, 1338))
+            s.listen()
+            conn, addr = s.accept()
+            with conn:
+                self.Client_address.emit(addr)
+                while self.ThreadActive:
+                    
+                    #index = int(self.muestreo*self.muestreo_time)
+                        #self.data_line3.setData(self.cycledrive_data[:,0],  self.cycledrive_data[:,1])  # Update the data.
+                    data = conn.recv(1024)
+                    if not data:
+                        break
+                    data = str(config.Velocidad).encode('utf8')
+                    #print(data)
+                    conn.send(data)
+
+                    data = conn.recv(1024)
+                    if not data:
+                        break
+                    data = str(config.Velocidad_perfil).encode('utf8')
+                    #print(data)
+                    conn.send(data)
+   
+
     def stop(self):
         self.ThreadActive = False
         self.quit()
