@@ -57,7 +57,7 @@ class UI(QMainWindow):
 		self.timer = QTimer()
 
 	def setupUi(self):
-		uic.loadUi("PVE-Python\interfaz_app.ui",self)
+		uic.loadUi("interfaz_app.ui",self)
 				
 		self.tabs_pruebas = self.findChild(QTabWidget,"tabs_pruebas")
 		self.tabs_pruebas.currentChanged.connect(self.tab_change)
@@ -435,7 +435,7 @@ class UI(QMainWindow):
 		# self.thread[2].start()
 		# self.thread[2].data.connect(self.update_labels2)
 		
-		serialPort = 'COM5' # Debe revisarse el puerto al que se conecta el GINS
+		serialPort = 'COM3' # Debe revisarse el puerto al que se conecta el GINS
 		baudRate = 460800
 		self.thread[1] = Gins(serialPort,baudRate,parent=None,index=1)
 		self.thread[1].data.connect(self.update_gins_data)
@@ -862,10 +862,10 @@ class CDaq(QThread):
 			units=nidaqmx.constants.AccelUnits.METERS_PER_SECOND_SQUARED, 
 			sensitivity=sensZ, sensitivity_units=nidaqmx.constants.AccelSensitivityUnits.VOLTS_PER_G)	#Acc z
 		
-		bufsize_callback=1200
-		self.task1.timing.cfg_samp_clk_timing(rate=12000,sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS, samps_per_chan=144000)
-		self.task2.timing.cfg_samp_clk_timing(rate=12000,sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS, samps_per_chan=144000)
-		self.task3.timing.cfg_samp_clk_timing(rate=12000,sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS, samps_per_chan=144000)
+		bufsize_callback=1250
+		self.task1.timing.cfg_samp_clk_timing(rate=5000,sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS, samps_per_chan=60000)
+		self.task2.timing.cfg_samp_clk_timing(rate=5000,sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS, samps_per_chan=60000)
+		self.task3.timing.cfg_samp_clk_timing(rate=5000,sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS, samps_per_chan=60000)
 		
 		self.readertask1 = stream_readers.AnalogMultiChannelReader(self.task1.in_stream)
 		self.readertask2 = stream_readers.AnalogMultiChannelReader(self.task2.in_stream)
@@ -960,7 +960,7 @@ class Dict2Db():
 		super(Dict2Db, self).__init__()
 		self.db_table = db_table
 		self.db_name = db_name
-		self.db_conn = sqlite3.connect("PVE-Python/database/" + self.db_name, check_same_thread=False)
+		self.db_conn = sqlite3.connect("database/" + self.db_name, check_same_thread=False)
 		self.cursor = self.db_conn.cursor()
 		self.create_table_str = "CREATE TABLE IF NOT EXISTS " + self.db_table + " (t REAL AUTO_INCREMENT, "
 
