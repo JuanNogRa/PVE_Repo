@@ -512,7 +512,7 @@ recorrida:</string>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
-            <layout class="QVBoxLayout" name="Modo_control">
+            <layout class="QVBoxLayout" name="verticalLayout_13">
              <item>
               <widget class="QRadioButton" name="Lazo_abierto">
                <property name="text">
@@ -608,45 +608,6 @@ recorrida:</string>
              </item>
             </layout>
            </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
-             <item>
-              <widget class="QLabel" name="LabelIP">
-               <property name="text">
-                <string>Dirección IP Servidor:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="EditIPHost"/>
-             </item>
-             <item>
-              <widget class="QLabel" name="DataIP">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_10">
-             <item>
-              <widget class="QLabel" name="LabelIPC">
-               <property name="text">
-                <string>Dirección IP Cliente:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="DataIPC">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
           </layout>
          </widget>
         </item>
@@ -661,13 +622,6 @@ recorrida:</string>
          <layout class="QVBoxLayout" name="verticalLayout_11">
           <item>
            <layout class="QVBoxLayout" name="Senales"/>
-          </item>
-          <item>
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
           </item>
           <item>
            <layout class="QVBoxLayout" name="Senales1"/>

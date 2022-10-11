@@ -199,7 +199,7 @@ class SocketComunication(QThread):
 
         # Bind the socket to the address given on the command line
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((self.HOST, 1338))
+            s.bind(('', 1338))
             s.listen()
             conn, addr = s.accept()
             with conn:

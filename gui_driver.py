@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(589, 600)
+        MainWindow.resize(796, 563)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -45,39 +45,9 @@ class Ui_MainWindow(object):
         self.Measure_Gauge.setInvertedAppearance(False)
         self.Measure_Gauge.setObjectName("Measure_Gauge")
         self.horizontalLayout_3.addWidget(self.Measure_Gauge)
-        self.Indicaciones = QtWidgets.QLabel(self.centralwidget)
-        font = QtGui.QFont()
-        font.setPointSize(18)
-        font.setBold(True)
-        font.setWeight(75)
-        self.Indicaciones.setFont(font)
-        self.Indicaciones.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.Indicaciones.setStyleSheet("")
-        self.Indicaciones.setText("")
-        self.Indicaciones.setAlignment(QtCore.Qt.AlignCenter)
-        self.Indicaciones.setObjectName("Indicaciones")
-        self.horizontalLayout_3.addWidget(self.Indicaciones)
-        self.Source_Gauge = QtWidgets.QProgressBar(self.centralwidget)
-        self.Source_Gauge.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.Source_Gauge.setStyleSheet("QProgressBar {\n"
-"border: 2px solid rgba(33, 37, 43, 180);\n"
-"border-radius: 5px;\n"
-"text-align: center;\n"
-"font: 75 14pt \"MS Shell Dlg 2\";\n"
-"background-color: transparent;\n"
-"color: black;\n"
-"width: 80;\n"
-"\n"
-"}\n"
-"QProgressBar::chunk {\n"
-"    background-color: rgb(173, 7, 255);\n"
-"}")
-        self.Source_Gauge.setMaximum(400)
-        self.Source_Gauge.setProperty("value", 0)
-        self.Source_Gauge.setAlignment(QtCore.Qt.AlignCenter)
-        self.Source_Gauge.setOrientation(QtCore.Qt.Vertical)
-        self.Source_Gauge.setObjectName("Source_Gauge")
-        self.horizontalLayout_3.addWidget(self.Source_Gauge)
+        self.Senales = QtWidgets.QVBoxLayout()
+        self.Senales.setObjectName("Senales")
+        self.horizontalLayout_3.addLayout(self.Senales)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -94,17 +64,6 @@ class Ui_MainWindow(object):
         self.Espacio.setText("")
         self.Espacio.setObjectName("Espacio")
         self.horizontalLayout.addWidget(self.Espacio)
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        font.setBold(True)
-        font.setWeight(75)
-        font.setStrikeOut(False)
-        font.setKerning(True)
-        self.label.setFont(font)
-        self.label.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
-        self.label.setObjectName("label")
-        self.horizontalLayout.addWidget(self.label)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
@@ -131,11 +90,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Interfaz para prueba con perfil de velocidad"))
         self.Measure_Gauge.setFormat(_translate("MainWindow", "%v km/h"))
-        self.Source_Gauge.setFormat(_translate("MainWindow", "%vkm/h"))
         self.label_2.setText(_translate("MainWindow", "Velocidad\n"
 "actual"))
-        self.label.setText(_translate("MainWindow", "Velocidad de\n"
-"perfil de conducción"))
         self.label_4.setText(_translate("MainWindow", "Dirección IP del servidor"))
         self.Conectar_2.setText(_translate("MainWindow", "Conectar"))
         self.Desconectar_2.setText(_translate("MainWindow", "Desconectar"))

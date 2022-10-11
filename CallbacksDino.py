@@ -48,15 +48,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.fecha_hora_inicio = ''             #Declaración de la variable donde se guardar la hora del sistema  cuando se inicia la prueba
         self.fecha_hora_finalizacion = ''       #Declaración de la variable donde se guardar la hora del sistema  cuando se termina la prueba
         self.path=''                            #Declaración de la variable donde se guardar la dirección del archivo .csv donde esta el perfil de velocidad
-        self.pos_perfil=0                       #Declaración de la variable donde se va controlar la velocidad actual del perfil de conducción
-
+        
         self.potencia_acumulada=0               #Declaración de la variable donde se guardar el acumulado de la potencia
         self.Tasa_Muestreo=4                    #Declaración de la variable donde se guardar la tasa de muestreo
         self.muestreo_time=0.0                  #Declaración de la variable donde se guardar el tiempo que dura la adquisicón de una muestra
         self.ygraph=0.0                         #Declaración de la variable donde se guardar la ultima velocidad registrada
         self.startCalibration=False             #Declaración de la variable para controlar que se esta calibrando el offset del par de celdas de carga
         self.counter_muestra=0                  #Declaración de la variable para guardar la cantidad flancos de subidas del lector de frecuencia
-        #self.CycleActivate = False              #Declaracion de la variable para controlar si se va realizar la prueba teniendo en cuenta el perfil de conduccion
+        self.CycleActivate = False              #Declaracion de la variable para controlar si se va realizar la prueba teniendo en cuenta el perfil de conduccion
         
         self.SendVoltage = SendVoltage()                                    #Declaracion del objeto para utilizar la clase SendVoltage del modulo ThreadsDino para salida de voltaje analogo controlado o en lazo abierto
         self.ReadVoltage = ReadVoltage(self.MinimaFrecuencia)               #Declaracion del objeto para utilizar la clase ReadVoltage del modulo ThreadsDino para las entradas de voltaje analogo  
@@ -64,8 +63,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.pushButton.setEnabled(False)                                   #Metodo de PyQt para deshabilitar el boton "Empezar" 
         self.Aplicar.clicked.connect(lambda: self.DACVoltageDC())           #Metodo de PyQt para conectar el callback generado al presionar el boton "Empezar" con el metodo DACVoltageDC
         self.button_parametro.clicked.connect(lambda: self.ParamsInput())   #Metodo de PyQt para conectar el callback generado al presionar el boton "Aplicar Parametros" con el metodo ParamsInput
-        self.pushButton_2.clicked.connect(lambda: self.startTest())         #Metodo de PyQt para conectar el callback generado al presionar el boton "Terminar" con el metodo startTest
-        self.pushButton.clicked.connect(lambda: self.stopTest())
+        self.pushButton_2.clicked.connect(lambda: self.startTest())         #Metodo de PyQt para conectar el callback generado al presionar el boton "Empezar" con el metodo startTest
+        self.pushButton.clicked.connect(lambda: self.stopTest())            #Metodo de PyQt para conectar el callback generado al presionar el boton "Terminar" con el metodo stopTest
         self.Load_file.clicked.connect(lambda: self.CicloManejoPath())
         self.Accept.clicked.connect(lambda: self.CicloManejoAccept())
         self.ReadVoltage.start()
@@ -85,6 +84,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         n_data=900
         self.cycledrive_data = np.array([])
         self.xdata = [x for x in list(range(n_data))]
+        self.pos_perfil=0
         self.ydata = [x*0 for x in list(range(n_data))]
         self.ydata1 = [x*0 for x in list(range(n_data))]
         self.ydata2 = [x*0 for x in list(range(n_data))]
@@ -134,7 +134,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         #self.ReadFrecuency.start()
         self.ReadVoltage.VoltageUpdate.connect(self.VoltageSlotUpdate)
         self.ReadVoltage.FrecuencyUpdate.connect(self.FrecuencySlotUpdate)
-        print("Parametros actualizados")
+        self.msg.setText("Parametros actualizados")
+        self.msg.show()
 
     def DACVoltageDC(self):
         if self.Lazo=='Lazo abierto':
@@ -174,28 +175,49 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.path=filename[0]
         self.Path.setText(self.path)
     
+    def extract_ip(self):
+        st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:       
+            st.connect(('10.255.255.255', 1))
+            IP = st.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            st.close()
+        return IP
+
     def CicloManejoAccept(self): 
         if self.path !='':
-            self.HOST = self.EditIPHost.text()  # Standard loopback interface address (localhost)
+            #self.HOST = self.EditIPHost.text()  # Standard loopback interface address (localhost)
         
             df = pd.read_csv(self.path)
             styles = {'color':'black', 'font-size':'15px'}
             self.graphWidget.setLabel('bottom', 'Tiempo (s)', **styles)
             self.cycledrive_data=df.to_numpy()
-            server_name = self.HOST
-            server_address = (server_name, 1338)
-            self.DataIP.setText('starting up on {} port {}'.format(*server_address))
-            self.SocketComunication = SocketComunication(self.HOST)
+            self.cycle_temp=df.to_numpy()
+            #print(len(self.cycle_temp))
+            self.data_line3.setData(self.cycledrive_data[:,0],  self.cycledrive_data[:,1])  # Update the data.
+            self.cycle_temp[:,1]=np.zeros(901)
+            #server_name = self.HOST
+            server_address = (self.extract_ip(), 1338)
+            self.DataIP.setText('La dirección IP del servidor es {}'.format(*server_address))
+            self.SocketComunication = SocketComunication(server_address)
             self.SocketComunication.start()
             self.SocketComunication.Client_address.connect(self.SocketClient)
-            self.msg.setText('El sistema esta en el modo de ciclo de conducción.\nEl cliente se conectara usando la dirección '+self.HOST)
-            self.msg.exec_()
-            #self.CycleActivate = True
+            self.msg.setText('El sistema esta en el modo de ciclo de conducción.')
+            self.msg.show()
+            self.CycleActivate = True
             
 
     def startTest(self):
         self.start=time.time()
         self.Tasa_Muestreo = float(self.Frecuencia_value.text())
+        n_data=int(900*self.Tasa_Muestreo)
+        self.xdata = [x/self.Tasa_Muestreo for x in list(range(n_data))]
+        #self.xdata.sort(reverse = True)
+        self.ydata = [x*0 for x in list(range(n_data))]
+        self.ydata1 = [x*0 for x in list(range(n_data))]
+        self.ydata2 = [x*0 for x in list(range(n_data))]
         self.fecha_prueba = datetime.now().strftime("%d/%m/%Y")
         self.fecha_prueba = self.fecha_prueba.replace('/', '_').replace(' ', '-')
         self.fecha_hora_inicio = datetime.now().strftime("%H/%M/%S")
@@ -210,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.offsetCelda2 = 0.0
         self.counter_muestra = 0   
         self.msg.setText('Calibrando offset celdas de carga espere hasta completar 500 muestras.')
-        self.msg.exec_()
+        self.msg.show()
         if self.Lazo=='Lazo abierto':
             self.dataforDataFrame = np.array([[0, 0, 0, 0, 0, 0, 0]])
         elif self.Lazo=='Lazo cerrado':
@@ -221,7 +243,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.Do_every.Muestreo_Time.connect(self.Time_MuestreoSlotUpdate)
     
     def stopTest(self):
+        if (self.CycleActivate):
+            self.timer.stop()
         config.startTest_activacte = False
+        self.msg.setText('Prueba terminada.')
+        self.msg.show()
         self.fecha_hora_finalizacion = datetime.now().strftime("%H/%M/%S")
         self.fecha_hora_finalizacion = self.fecha_hora_finalizacion.replace('/', '_').replace(' ', '-')
         Observaciones=str(self.plainTextEdit.toPlainText())
@@ -286,11 +312,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.startCalibration = False
                 self.msg.setText('Calibración del offset terminado.\nOffset Celda 1='+str(self.offsetCelda1)
               +'\nOffset Celda 2='+str(self.offsetCelda2))
-                self.msg.exec_()
+                self.msg.show()
                 self.pushButton.setEnabled(True)
-                self.timer.setInterval(1000)
-                self.timer.timeout.connect(self.update_perfil)
-                self.timer.start()
+                if(self.CycleActivate):
+                    self.timer.setInterval(1000)
+                    self.timer.timeout.connect(self.update_perfil)
+                    self.timer.start()
 
     def FrecuencySlotUpdate(self, datos_frecuencia):
         frecuencia=datos_frecuencia[0]
@@ -370,32 +397,38 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 #print(sys.getsizeof(self.ydata))
                 self.ygraph=velocidad*3.6
                 config.f=False
-                config.Velocidad=self.ygraph
+                
                 #self.Save=False
         
     def Time_MuestreoSlotUpdate(self, MuestreoTime):
         self.muestreo_time=MuestreoTime
         if(config.startTest_activacte==True):
             if config.f:
-                #self.xdata = self.xdata[1:] + [self.muestreo]  # Remove the first
-                self.ydata = self.ydata[1:] + [self.ygraph]  # Remove the first
+                self.ydata=self.ydata[1:]+[self.ygraph]
                 self.data_line.setData(self.xdata, self.ydata)  # Update the data.
-                self.ydata1 = self.ydata1[1:] + [self.torque_celda_01]  # Remove the first
+                self.ydata1=self.ydata1[1:]+[self.torque_celda_01]
                 self.data_line1.setData(self.xdata, self.ydata1)  # Update the data.
-                self.ydata2 = self.ydata2[1:] + [self.torque_celda_02]  # Remove the first
+                self.ydata2=self.ydata2[1:]+[self.torque_celda_02]  # Remove the first
                 self.data_line2.setData(self.xdata, self.ydata2)  # Update the data.
-                
+                #self.xdata = self.xdata[1:] + [self.muestreo]  # Remove the first                
 
     def SocketClient(self, address):
-        self.DataIPC.setText(f"Connected by {address}")
+        self.DataIPC.setText(f"Conectado por {address}")
     
     def update_perfil(self):
-        if (self.pos_perfil<900):
-            self.data_line3.setData(self.cycledrive_data[self.pos_perfil,0],  self.cycledrive_data[self.pos_perfil,1])  # Update the data.
-            config.Velocidad_perfil=self.cycledrive_data[self.pos_perfil,1]
+        if (self.pos_perfil<len(self.cycle_temp[:,0])):
+            self.cycle_temp[:,1]=np.roll(self.cycle_temp[:,1],-1)
+            self.cycle_temp[-1,1]=self.cycledrive_data[0,1]
+            self.cycledrive_data[:,1]=np.roll(self.cycledrive_data[:,1],-1)
+            config.Velocidad_perfil = self.cycle_temp[-1,1]
+            config.Velocidad=self.ygraph
+            self.data_line3.setData(self.cycle_temp[:,0],  self.cycle_temp[:,1])  # Update the data.
             self.pos_perfil+=1
         else:
-            self.pos_perfil=0
+            self.msg.setText("Prueba con perfil de velocidad terminado.")
+            self.msg.show()
+            self.pos_perfil=0  
+            self.stopTest()
 
     def sistema_sugeno(self):
         FS = FuzzySystem()
