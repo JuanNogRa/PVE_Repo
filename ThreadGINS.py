@@ -1,7 +1,6 @@
 import serial
 from PyQt5.QtCore import QThread, pyqtSignal
 from bitstring import BitArray
-import time
 
 class Gins(QThread):
 	vals = dict()
@@ -109,7 +108,7 @@ class Gins(QThread):
 	def run(self):
 		print("GINS iniciado en hilo ->",self.index)
 		while True:
-			time.sleep(0.01)
+			#time.sleep(0.01)
 			#t1 = time.time()
 			#t1 = datetime.now()
 			if self.is_paused:
@@ -140,28 +139,3 @@ class Gins(QThread):
 		print('GINS finalizado en hilo ->',self.index)
 		self.port_close()
 		self.terminate()
-	
-class Do_every(QThread):
-	Muestreo_Time = pyqtSignal(float)
-	def __init__(self, period):
-		QThread.__init__(self)
-		self.period = period
-		
-	def run(self):
-		self.ThreadActive=True
-		g = self.g_tick()
-		print("Empezando...")
-		while self.ThreadActive:
-			self.start=time.time()
-			time.sleep(next(g))
-			self.Muestreo_Time.emit(time.time()-self.start)
-
-	def g_tick(self):
-		t = time.time()
-		while self.ThreadActive:
-			t += self.period
-			yield max(t - time.time(),0)
-				
-	def stop(self):
-		self.ThreadActive = False
-		self.quit()

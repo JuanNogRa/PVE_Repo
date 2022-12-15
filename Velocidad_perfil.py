@@ -138,21 +138,11 @@ class SocketComunication(QThread):
         
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self.HOST, 1338))
-            s.sendall(b"Conectado a servidor.")
-            data = s.recv(1024)
-            strings = data.decode('utf8')
-            
             while self.ThreadActive:
                 #s.sendall(b"Hello, world")
                 s.sendall(b"Recibiendo velocidad actual")
                 data = s.recv(1024)
                 strings = data.decode('utf8')
-                if strings=='true':
-                    self.pos_indicador.setColor((0,140,0))
-                    self.pos_indicador.setText('Empiece')
-                elif strings=='false':
-                    self.pos_indicador.setColor((145, 15, 15))
-                    self.pos_indicador.setText('Terminado')
                 #print(strings)
                 #get the num
                 num = float(strings)
