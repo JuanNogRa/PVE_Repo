@@ -1,0 +1,9 @@
+0,1,Cuentas de vueltas,Muestreo (s),Torque de referencia (N-m),Velocidad medida (m/s),Voltaje PAU (V),Voltaje celda #1 (V),Voltaje celda #2 (V),Voltaje de control difuso (V),Voltaje de excitacion (V)
+Fecha,26_08_2022,,,,,,,,,
+Hora de inicio,11_44_11,,,,,,,,,
+Hora de finalización,11_45_13,,,,,,,,,
+Voltage de salida analoga,,,,,,,,,,
+Voltaje offset celda 1,-0.011038837302608996,,,,,,,,,
+Voltaje offset celda 2,-0.04772590699007338,,,,,,,,,
+"ObservacionesEscriba sus observaciones antes de presionar ""Terminar"" o borre este campo si no tiene...",,,,,,,,,,
+,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
